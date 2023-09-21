@@ -58,7 +58,7 @@ void drive(int direction, int turn, int speed, int duration){
     left = true;
     stop = false;
   }
-  if (direction == 0 && turn == 0){
+  if ((direction == 0) && (turn == 0)){
     forw = false;
     back = false;
     right = false;
@@ -107,25 +107,33 @@ void rasp_drive(){
   // read the incoming byte:
   instruction = Serial.read();
   }
+  else{
+    instruction = 'v';
+  }
+  direction = 0;
+  turn = 0;
+
   if (instruction == 'w'){
     direction = 1;
     turn = 0;
   }
-    if (instruction == 's'){
+  if (instruction == 's'){
     direction = 2;
     turn = 0;
   }
-    if (instruction == 'a'){
+  if (instruction == 'a'){
     direction = 0;
     turn = 1;
   }
-    if (instruction == 'd'){
+  if (instruction == 'd'){
     direction = 0;
     turn = 2;
   }
-  drive(direction = direction, turn=turn, speed=255, duration=500);
-  direction = 0;
-  turn = 0;
+  if (instruction == 'v'){
+    direction = 0;
+    turn = 0;
+  }
+  drive(direction = direction, turn = turn, speed=255, duration=100);
 }
 
 void loop() {
