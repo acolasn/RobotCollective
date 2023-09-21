@@ -2,6 +2,7 @@ import serial
 import time
 import curses
 import queue
+import numpy as np
 
 def chat_driver(q):
 
@@ -9,10 +10,8 @@ def chat_driver(q):
 
     while True:
         command = q.get()
-        print(command)
-        commands = extract_characters(command)
+        commands = ext_chr_motor(command)
         for char in commands:
-            print(char)
             if char == 'w':
                 ser.write(b'w')  # Send byte to Arduino
             elif char == 's':
@@ -30,4 +29,25 @@ def extract_characters(s):
     else:
         return []
 
+def ext_chr_motor(string):
+    chars = [*string]
+    chars= np.asarray(chars)
+    hashes = np.where(chars == '#')[0]
+    speech = chars[hashes[0]+1:hashes[1]]
+
+    front_brack = np.where(chars == '[')[0][0]
+    back_brack = np.where(chars == ']')[0][0]
+    motor = chars[front_brack+1:back_brack]
+    return motor
+
+def ext_chr_string(string):
+    chars = [*string]
+    chars= np.asarray(chars)
+    hashes = np.where(chars == '#')[0]
+    speech = chars[hashes[0]+1:hashes[1]]
+    speechstring = ""
+    for i in speech:
+        i = str(i)
+        speechstring = speechstring+i
+    return speechstring
 

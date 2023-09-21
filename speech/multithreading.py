@@ -1,6 +1,5 @@
 import threading
 import queue
-import time 
 import chat_commanding
 import chat_driving
 
