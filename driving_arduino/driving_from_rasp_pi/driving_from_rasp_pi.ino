@@ -10,7 +10,7 @@
   bool forw;
   bool back;
   int direction;
-  int tur
+  int turn;
   int duration;
 
   char instruction; // for incoming serial data
@@ -52,6 +52,7 @@ void drive(int direction, int turn, int speed, int duration){
     back = false;
     right = false;
     left = true;
+
   }
 
   // running
@@ -78,7 +79,7 @@ void drive(int direction, int turn, int speed, int duration){
     digitalWrite(backRight, LOW);
     digitalWrite(backLeft, LOW);
   }
-  if (back == true){ // MOVING FORWARD
+  if (back == true){ // MOVING BACKWARDS
     forw== false;
     digitalWrite(forwRight, LOW);
     digitalWrite(forwLeft, LOW);
@@ -110,8 +111,8 @@ void rasp_drive(){
     turn = 2;
   }
   drive(direction = direction, turn=turn, speed=255, duration=500);
-  direction = 0
-  turn = 0
+  direction = 0;
+  turn = 0;
 }
 
 void loop() {
