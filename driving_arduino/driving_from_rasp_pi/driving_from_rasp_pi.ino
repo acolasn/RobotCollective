@@ -9,6 +9,7 @@
   bool left;
   bool forw;
   bool back;
+  bool stop;
   int direction;
   int turn;
   int duration;
@@ -34,57 +35,69 @@ void drive(int direction, int turn, int speed, int duration){
     back = false;
     right = false;
     left = false;
+    stop = false;
   }
   if (direction == 2){
     forw = false;
     back = true;
     right = false;
     left = false;
+    stop = false;
   }
   if (turn == 1){
     forw = false;
     back = false;
     right = true;
     left = false;
+    stop = false;
   }
   if (turn == 2){
     forw = false;
     back = false;
     right = false;
     left = true;
-
+    stop = false;
+  }
+  if (direction == 0 && turn == 0){
+    forw = false;
+    back = false;
+    right = false;
+    left = false;
+    stop = true; 
   }
 
   // running
   analogWrite(speedRight, speed);
   analogWrite(speedLeft, speed);
   if (right == true){ // TURNING TO THE RIGHT
-    left == false;
     digitalWrite(forwRight, LOW);
     digitalWrite(forwLeft, HIGH);
     digitalWrite(backRight, HIGH);
     digitalWrite(backLeft, LOW);
   }
   if (left == true){ // TURNING TO THE LEFT
-    right== false;
     digitalWrite(forwRight, HIGH);
     digitalWrite(forwLeft, LOW);
     digitalWrite(backRight, LOW);
     digitalWrite(backLeft, HIGH);
   }
   if (forw == true){ // MOVING FORWARD
-    back== false;
     digitalWrite(forwRight, HIGH);
     digitalWrite(forwLeft, HIGH);
     digitalWrite(backRight, LOW);
     digitalWrite(backLeft, LOW);
   }
   if (back == true){ // MOVING BACKWARDS
-    forw== false;
     digitalWrite(forwRight, LOW);
     digitalWrite(forwLeft, LOW);
     digitalWrite(backRight, HIGH);
     digitalWrite(backLeft, HIGH);
+  }
+  if (stop == true){ // MOVING BACKWARDS
+    digitalWrite(forwRight, LOW);
+    digitalWrite(forwLeft, LOW);
+    digitalWrite(backRight, LOW);
+    digitalWrite(backLeft, LOW);
   }
   delay(duration);
 }
