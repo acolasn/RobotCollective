@@ -20,6 +20,6 @@ while True:
         ser.write(b's')
     elif char == ord('a'):
         ser.write(b'a')
-    elif char == 'd':
+    elif char == ord('d'):
         ser.write(b'd')
 

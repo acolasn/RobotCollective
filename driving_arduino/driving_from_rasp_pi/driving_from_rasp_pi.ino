@@ -114,11 +114,11 @@ void rasp_drive(){
   turn = 0;
 
   if (instruction == 'w'){
-    direction = 1;
+    direction = 2;
     turn = 0;
   }
   if (instruction == 's'){
-    direction = 2;
+    direction = 1;
     turn = 0;
   }
   if (instruction == 'a'){
