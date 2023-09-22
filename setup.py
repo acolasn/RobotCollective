@@ -7,6 +7,6 @@ setup(
     url='https://github.com/acolasn/RobotCollective',
     license='',
     author='',
-    author_email='',
+    author_email='anconi.1999@gmail.com',
     description=''
 )
