@@ -64,10 +64,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                             output.condition.wait()
                             frame = output.frame
                         frame_pil = Image.open(BytesIO(frame))
-                        qr_decode_output = read_qr_code_from_PIL(frame_pil)
-                        print(type(frame))
-                        print(np.array(Image.open(BytesIO(frame))).shape)
+                        qr_decode_output, returning_points = read_qr_code_from_PIL(frame_pil)
                         print(qr_decode_output)
+                        try:
+                            center_x = (returning_points[0].x + returning_points[2].x)/2
+                            center_y = (returning_points[0].y + returning_points[2].y)/2
+                            print(center_x)
+                            print(center_y)
+                        except:
+                            print(None)
                         self.wfile.write(b'--FRAME\r\n')
                         self.send_header('Content-Type', 'image/jpeg')
                         self.send_header('Content-Length', len(frame))
@@ -90,7 +95,7 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
 
 
 picam2 = Picamera2()
-camera_config = picam2.create_video_configuration(main={"size": (640, 480)}, lores={"size": (320,240)}, encode="main")
+camera_config = picam2.create_video_configuration(main={"size": (640, 480)}, lores={"size": (320,240)}, encode="lores")
 picam2.configure(camera_config)
 output = StreamingOutput()
 picam2.start_recording(MJPEGEncoder(), FileOutput(output))

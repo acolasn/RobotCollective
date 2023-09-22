@@ -58,7 +58,11 @@ def read_qr_code_from_PIL(pil_image: Image.Image) -> Optional[str]:
         Optional[str]: The decoded data from the QR code if found, or None if no QR code is detected.
     """
     decoded_objects = decode(pil_image)
+    returning_qr = None
+    returning_points = None
     for obj in decoded_objects:
         if obj.type == 'QRCODE':
-            return obj.data.decode('utf-8')
-    return None
+            returning_qr = obj.data.decode('utf-8')
+            returning_points = obj.polygon
+            # return obj.data.decode('utf-8')
+    return returning_qr, returning_points
