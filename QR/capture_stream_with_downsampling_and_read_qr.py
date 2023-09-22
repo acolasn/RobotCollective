@@ -12,7 +12,7 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 from pyzbar.pyzbar import decode
-from utils import Timer, read_qr_code_from_PIL
+from utils import Timer, read_qr_code_from_PIL, calculate_distance_of_qr
 
 PAGE = """\
 <html>
@@ -69,8 +69,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         try:
                             center_x = (returning_points[0].x + returning_points[2].x)/2
                             center_y = (returning_points[0].y + returning_points[2].y)/2
-                            print(center_x)
-                            print(center_y)
+                            area = (returning_points[2].x - returning_points[0].x) * (returning_points[2].y - returning_points[0].y)
+                            distance = calculate_distance_of_qr(area, "poly")
+                            print("CENTER x:", center_x)
+                            print("CENTER y", center_y)
+                            print("AREA: ", area)
+                            print("DISTANCE: ", distance)
                         except:
                             print(None)
                         self.wfile.write(b'--FRAME\r\n')

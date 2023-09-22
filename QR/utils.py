@@ -66,3 +66,17 @@ def read_qr_code_from_PIL(pil_image: Image.Image) -> Optional[str]:
             returning_points = obj.polygon
             # return obj.data.decode('utf-8')
     return returning_qr, returning_points
+
+def calculate_distance_of_qr(area, mode = "poly"):
+    coefs_linear = np.array([-0.32297904, 69.71250129])
+    coefs_poly = np.array([ 3.75838506e-03, -1.19422144e+00,  1.08565503e+02])
+    area = abs(area)
+    area_root = np.sqrt(area)
+    distance = 250
+    if mode == "poly":
+        distance = coefs_poly[0] * area + coefs_poly[1] * area_root + coefs_poly[2]
+    elif mode == "linear":
+        distance = coefs_linear[0] * area_root + coefs_linear[1]
+    if distance < 15:
+        distance = 0
+    return distance
