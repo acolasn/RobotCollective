@@ -4,13 +4,15 @@ import socketserver
 from http import server
 from threading import Condition
 import time
-import libcamera
+
 from picamera2 import Picamera2
-from picamera2.encoders import MJPEGEncoder, JpegEncoder, Encoder
+from picamera2.encoders import MJPEGEncoder
 from picamera2.outputs import FileOutput
 from io import BytesIO
 from PIL import Image
 import numpy as np
+from pyzbar.pyzbar import decode
+from utils import Timer, read_qr_code_from_PIL
 
 PAGE = """\
 <html>
@@ -23,24 +25,6 @@ PAGE = """\
 </body>
 </html>
 """
-
-class Timer:
-    """A simple timer class for performance profiling Taken from https://github.com/flat
-    ironinstitute/online_psp/blob/master/online_psp/online_psp_simulations.py.
-
-    Usage:
-    with Timer() as t:
-        DO SOMETHING HERE
-    print('Above (DO SOMETHING HERE) took %f sec.' % (t.interval))
-    """
-
-    def __enter__(self):
-        self.start = time.perf_counter()
-        return self
-
-    def __exit__(self, *args):
-        self.end = time.perf_counter()
-        self.interval = self.end - self.start
 
 class StreamingOutput(io.BufferedIOBase):
     def __init__(self):
@@ -79,8 +63,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         with output.condition:
                             output.condition.wait()
                             frame = output.frame
+                        frame_pil = Image.open(BytesIO(frame))
+                        qr_decode_output = read_qr_code_from_PIL(frame_pil)
                         print(type(frame))
                         print(np.array(Image.open(BytesIO(frame))).shape)
+                        print(qr_decode_output)
                         self.wfile.write(b'--FRAME\r\n')
                         self.send_header('Content-Type', 'image/jpeg')
                         self.send_header('Content-Length', len(frame))
@@ -103,12 +90,10 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
 
 
 picam2 = Picamera2()
-camera_config = picam2.create_video_configuration(main={"size": (1920, 1080)}, lores={"size": (120,90)}, encode="lores")
-# camera_config["transform"] = libcamera.Transform(hflip=1, vflip=1)
+camera_config = picam2.create_video_configuration(main={"size": (640, 480)}, lores={"size": (320,240)}, encode="main")
 picam2.configure(camera_config)
 output = StreamingOutput()
 picam2.start_recording(MJPEGEncoder(), FileOutput(output))
-# picam2.start_recording(JpegEncoder(), FileOutput(output))
 
 try:
     address = ('', 8000)
