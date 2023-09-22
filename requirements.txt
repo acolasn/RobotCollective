@@ -1,2 +1,7 @@
 pyzbar
 numpy
+openai
+pyttsx3
+pyaudio
+serial
+PIL
