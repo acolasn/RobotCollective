@@ -8,7 +8,7 @@ import numpy as np
 def openAI_driver(q):
 
     # Set OpenAI API Key (secret!!!)
-    openai.api_key = "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"
+    openai.api_key = "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"
 
     # Initialize conversation history
     conversation = [
