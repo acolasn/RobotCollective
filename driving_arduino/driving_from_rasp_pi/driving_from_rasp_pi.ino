@@ -176,6 +176,7 @@ void rasp_drive(int US_distance){
     speed = 255;
     duration = 1000;
     serialFlush();
+    Serial.println("c");
   }
   drive(direction = direction, turn = turn, speed=255, duration=500);
 }
