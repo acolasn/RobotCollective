@@ -169,6 +169,7 @@ void rasp_drive(int US_distance){
     direction = 0;
     turn = 0;
   }
+
   if (US_distance > 0 && US_distance < 20){
     critical_distance = true;
     direction = 1;
