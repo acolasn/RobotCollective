@@ -42,6 +42,15 @@ class Timer:
         self.end = time.perf_counter()
         self.interval = self.end - self.start
 
+def image_to_byte_array(image: Image) -> bytes:
+  # BytesIO is a file-like buffer stored in memory
+  imgByteArr = io.BytesIO()
+  # image.save expects a file-like as a argument
+  image.save(imgByteArr, format="JPEG")
+  # Turn the BytesIO object back into a bytes object
+  imgByteArr = imgByteArr.getvalue()
+  return imgByteArr
+
 def read_qr_code(image_path: str) -> Optional[str]:
     """
     Reads a QR code from an image file.
@@ -167,9 +176,9 @@ class StreamingOutput(io.BufferedIOBase):
 
 logger = create_my_logger(logger_name="qr_logger")
 class StreamingHandler(server.BaseHTTPRequestHandler):
-    # def __init__(self,):
-    #     self.logger = create_my_logger(logger_name="qr_logger")
     def do_GET(self):
+        qr_cache = [None for _ in range(30)]
+        readed_qr = False
         if self.path == '/':
             self.send_response(301)
             self.send_header('Location', '/index.html')
@@ -190,31 +199,57 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.end_headers()
             try:
                 while True:
-                    with Timer() as t:
-                        with output.condition:
-                            output.condition.wait()
-                            frame = output.frame
-                        frame_pil = Image.open(BytesIO(frame))
-                        qr_decode_output, returning_points = read_qr_code_from_PIL(frame_pil)
-                        # print(qr_decode_output)
-                        try:
-                            center_x = (returning_points[0].x + returning_points[2].x)/2
-                            center_y = (returning_points[0].y + returning_points[2].y)/2
-                            area = (returning_points[2].x - returning_points[0].x) * (returning_points[2].y - returning_points[0].y)
-                            distance = calculate_distance_of_qr(area, "linear")
-                            logger.info("CENTER x: {}".format(center_x))
-                            logger.info("CENTER y {}".format(center_y))
-                            logger.info("AREA: {}".format(area))
-                            logger.info("DISTANCE: {}".format(distance))
-                        except:
-                            # logger.info(None)
-                            pass
-                        self.wfile.write(b'--FRAME\r\n')
-                        self.send_header('Content-Type', 'image/jpeg')
-                        self.send_header('Content-Length', len(frame))
-                        self.end_headers()
-                        self.wfile.write(frame)
-                        self.wfile.write(b'\r\n')
+                    # with Timer() as t:
+                    with output.condition:
+                        output.condition.wait()
+                        frame = output.frame
+                    frame_pil = Image.open(BytesIO(frame))
+                    qr_decode_output, returning_points = read_qr_code_from_PIL(frame_pil)
+
+                    # print(qr_decode_output)
+                    if qr_decode_output is not None:
+                        frame_numpy = np.array(frame_pil)
+
+                        center_x = (returning_points[0].x + returning_points[2].x)/2
+                        center_y = (returning_points[0].y + returning_points[2].y)/2
+                        area = (returning_points[2].x - returning_points[0].x) * (returning_points[2].y - returning_points[0].y)
+                        distance = calculate_distance_of_qr(area, "linear")
+                        qr_dict = {"qr_info": qr_decode_output, "distance": distance, "center_x": center_x, "center_y": center_y}
+                        qr_cache.append(qr_dict)
+                        # logger.info("CENTER x: {}".format(center_x))
+                        # logger.info("CENTER y {}".format(center_y))
+                        # logger.info("AREA: {}".format(area))
+                        # logger.info("DISTANCE: {}".format(distance))
+                        # print("CENTER x: {}".format(center_x))
+
+                        centroid = np.mean(np.array([[x['center_x'], x['center_y']] for x in qr_cache if x is not None]), axis = 0)
+                        distance = np.mean([x['distance'] for x in qr_cache if x is not None])
+                        print(centroid)
+                        print(distance)
+                        
+                        frame_numpy[int(centroid[1]-10):int(centroid[1]+10),int(centroid[0]-10):int(centroid[0]+10),:] = 0
+                        frame = image_to_byte_array(Image.fromarray(frame_numpy))
+                        # print("CENTER y {}".format(center_y))
+                        # print("AREA: {}".format(area))
+                        # print("DISTANCE: {}".format(distance))
+                        # print("Number of nans: {}".format(qr_cache.count(None)))
+                        # if qr_cache.count(None) < 10:
+                        #     readed_qr = True
+                        # else:
+                        #     readed_qr = False
+                        # print(readed_qr)
+                    else:
+                        qr_cache.append(None)
+                        
+                    qr_cache.pop(0)
+                    print("Number of nans: {}".format(qr_cache.count(None)))
+                    
+                    self.wfile.write(b'--FRAME\r\n')
+                    self.send_header('Content-Type', 'image/jpeg')
+                    self.send_header('Content-Length', len(frame))
+                    self.end_headers()
+                    self.wfile.write(frame)
+                    self.wfile.write(b'\r\n')
                     # print('Above operation took %f sec.' % (t.interval))
             except Exception as e:
                 logging.warning(
@@ -230,7 +265,7 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     daemon_threads = True
 
 picam2 = Picamera2()
-camera_config = picam2.create_video_configuration(main={"size": (640, 480)}, lores={"size": (320,240)}, encode="lores")
+camera_config = picam2.create_video_configuration(main={"size": (640, 480)}, lores={"size": (320,240)}, encode="main")
 picam2.configure(camera_config)
 output = StreamingOutput()
 picam2.start_recording(MJPEGEncoder(), FileOutput(output))
@@ -242,3 +277,6 @@ def run_qr_detection():
         server.serve_forever()
     finally:
         picam2.stop_recording()
+
+if __name__ == "__main__":
+    run_qr_detection()
