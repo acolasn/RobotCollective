@@ -99,8 +99,8 @@ def calculate_distance_of_qr(area, mode = "poly"):
         distance = coefs_poly[0] * area + coefs_poly[1] * area_root + coefs_poly[2]
     elif mode == "linear":
         distance = coefs_linear[0] * area_root + coefs_linear[1]
-    # if distance < 15:
-    #     distance = 0
+    if distance < 15:
+        distance = 0
     return distance
 
 def create_my_logger(
@@ -226,7 +226,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         distance = np.mean([x['distance'] for x in qr_cache if x is not None])
                         print(centroid)
                         print(distance)
-                        
+                        print(qr_decode_output)
                         frame_numpy[int(centroid[1]-10):int(centroid[1]+10),int(centroid[0]-10):int(centroid[0]+10),:] = 0
                         frame = image_to_byte_array(Image.fromarray(frame_numpy))
                         # print("CENTER y {}".format(center_y))
