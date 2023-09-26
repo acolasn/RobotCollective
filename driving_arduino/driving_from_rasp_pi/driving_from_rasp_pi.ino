@@ -133,7 +133,7 @@ void rasp_drive(){
     direction = 0;
     turn = 0;
   }
-  drive(direction = direction, turn = turn, speed=255, duration=100);
+  drive(direction = direction, turn = turn, speed=255, duration=500);
 }
 
 void loop() {
