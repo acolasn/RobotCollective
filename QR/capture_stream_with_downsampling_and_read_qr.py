@@ -39,6 +39,8 @@ class StreamingOutput(io.BufferedIOBase):
 
 class StreamingHandler(server.BaseHTTPRequestHandler):
     def do_GET(self):
+        qr_cache = np.zeros((30, ))
+        qr_cache[:] = np.nan
         if self.path == '/':
             self.send_response(301)
             self.send_header('Location', '/index.html')
