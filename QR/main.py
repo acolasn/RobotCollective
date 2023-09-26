@@ -219,9 +219,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         center_x = (returning_points[0].x + returning_points[2].x)/2
                         center_y = (returning_points[0].y + returning_points[2].y)/2
                         area = (returning_points[2].x - returning_points[0].x) * (returning_points[2].y - returning_points[0].y)
-                        distance = calculate_distance_of_qr(area, "linear")
-                        distance = calculate_distance_qr_main_resolution(area)
-                        qr_dict = {"qr_info": qr_decode_output, "distance": distance, "center_x": center_x, "center_y": center_y}
+                        # distance = calculate_distance_of_qr(area, "linear")
+                        distance_of_qr = calculate_distance_qr_main_resolution(area)
+                        qr_dict = {"qr_info": qr_decode_output, "distance": distance_of_qr, "center_x": center_x, "center_y": center_y}
                         qr_cache.append(qr_dict)
                         # logger.info("CENTER x: {}".format(center_x))
                         # logger.info("CENTER y {}".format(center_y))
@@ -231,27 +231,36 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
                         centroid = np.mean(np.array([[x['center_x'], x['center_y']] for x in qr_cache if x is not None]), axis = 0)
                         distance = np.mean([x['distance'] for x in qr_cache if x is not None])
-                        print(centroid)
-                        print(distance)
-                        print(qr_decode_output)
-                        print("AREA: {}".format(area))
+                        # print(centroid)
+                        # print(distance)
+                        # print(qr_decode_output)
+                        # print("AREA: {}".format(area))
                         frame_numpy[int(centroid[1]-10):int(centroid[1]+10),int(centroid[0]-10):int(centroid[0]+10),:] = 0
                         frame = image_to_byte_array(Image.fromarray(frame_numpy))
                         # print("CENTER y {}".format(center_y))
                         # print("AREA: {}".format(area))
                         # print("DISTANCE: {}".format(distance))
                         # print("Number of nans: {}".format(qr_cache.count(None)))
-                        # if qr_cache.count(None) < 10:
-                        #     readed_qr = True
-                        # else:
-                        #     readed_qr = False
-                        # print(readed_qr)
                     else:
                         qr_cache.append(None)
                         
                     qr_cache.pop(0)
-                    print("Number of nans: {}".format(qr_cache.count(None)))
+                    # print("Number of nans: {}".format(qr_cache.count(None)))
+                    if qr_cache.count(None) < 7:
+                        readed_qr = True
+                    else:
+                        readed_qr = False
                     
+                    if readed_qr:
+                        print(distance)
+                        if distance > 30:
+                            print("move forward")
+                        if centroid[0] - 320 > 50:
+                            print("move right")
+                        elif centroid[0] - 320 < -50:
+                            print("move left")
+                        
+                    # print(readed_qr)
                     self.wfile.write(b'--FRAME\r\n')
                     self.send_header('Content-Type', 'image/jpeg')
                     self.send_header('Content-Length', len(frame))
