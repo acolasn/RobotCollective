@@ -182,11 +182,9 @@ class StreamingOutput(io.BufferedIOBase):
 
 logger = create_my_logger(logger_name="qr_logger")
 class StreamingHandler(server.BaseHTTPRequestHandler):
-    def __init__(self, queue):
-        super().__init__(self, request, client_address, server)
-        self.queue = queue
 
     def do_GET(self):
+        queue = self.server.queue
         qr_cache = [None for _ in range(30)]
         readed_qr = False
         if self.path == '/':
@@ -255,7 +253,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         readed_qr = True
                     else:
                         readed_qr = False
-                    queue.put(centroid)
+                    
                     if readed_qr:
                         print(distance)
                         if distance > 30:
@@ -283,10 +281,6 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
-    def __init__(self, address, streaming_handler, queue=None):
-        super().__init__(address, streaming_handler)
-        self.queue = queue
-    
     allow_reuse_address = True
     daemon_threads = True
 
@@ -299,7 +293,8 @@ picam2.start_recording(MJPEGEncoder(), FileOutput(output))
 def run_qr_detection(queue):
     try:
         address = ('', 8000)
-        server = StreamingServer(address, StreamingHandler, queue)
+        server = StreamingServer(address, StreamingHandler)
+        server.queue = queue
         server.serve_forever()
     finally:
         picam2.stop_recording()
