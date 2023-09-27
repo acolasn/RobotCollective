@@ -76,7 +76,7 @@ void drive(int direction, int turn, int speed){
     left = true;
     stop = false;
   }
-  if ((direction == 0) && (turn == 0)){
+  if (direction == 0 && turn == 0){
     forw = false;
     back = false;
     right = false;
@@ -186,23 +186,31 @@ char read_instruction(){
 
 void lostMode(){
     switch (state) {
-    case 0:
-        drive(direction = 0, turn = 2, speed=150);
-        duration = 2000;
-        break;
-    case 1:
-        drive(direction = 2, turn = 0, speed=255);
-        duration = define_Levy_duration();
-        break;
-    case 2:
-        drive(direction = 0, turn = 1, speed=150);
-        duration = 2000;
-        break;
-    case 3:
-        drive(direction = 1, turn = 0, speed=150);
-        duration = define_Levy_duration()/2;
-        state = -1;
-        break;
+      case 0:
+          drive(direction = 0, turn = 2, speed=150);
+          duration = 2000;
+          break;
+      case 1:
+          drive(direction = 0, turn = 0, speed =255);
+          duration = 5000;
+          break;
+      case 2:
+          drive(direction = 2, turn = 0, speed=255);
+          duration = define_Levy_duration();
+          break;
+      case 3:
+          drive(direction = 0, turn = 1, speed=150);
+          duration = 2000;
+          break;
+      case 4:
+          drive(direction = 0, turn = 0, speed= 255);
+          duration = 5000;
+          break;
+      case 5:
+          drive(direction = 1, turn = 0, speed=150);
+          duration = define_Levy_duration()/2;
+          state = -1;
+          break;
     }
     // Move to the next state in the sequence
     state++;
@@ -243,8 +251,8 @@ void loop(){
     instruction = read_instruction();
     if ((currentMillis-previousMillis) > duration){
        if (instruction == 'l'){
-            //LOST MODE
-            lostMode();
+          //LOST MODE
+          lostMode();
        }
         else{
             duration = 100;
