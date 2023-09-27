@@ -124,7 +124,7 @@ def openAI_driver(q):
             except:
                 amt = random.uniform(0,0.1)
                 time.sleep(amt)
-                response = requests.post(url, data={'text': speech})
+                response = requests.post(url, data={'text': speech, 'model': model})
             with open(output_wav_path, 'wb') as f:
                 f.write(response.content)
 
