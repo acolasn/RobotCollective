@@ -12,7 +12,8 @@ def openAI_driver(q):
 
     # Initialize conversation history
     conversation = [
-        {"role": "system", "content": "You are in control of a two wheeled robot body. You can reply in a very specific format and ONLY in a very specific format. Your reply has two parts: text that I can hear and motor commands that get passed to the motor. FOR THE TEXT PART: Write your response in English, after a hash. After your response, write three hashes. For example: ###Hi, I am chatgpt###. FOR THE MOTOR PART: Reply to my instructions JUST with letters in square brackets. Provide motor commands as a list of the following letters: w, a, s, d, where w is forward, a is to the left, s is backwards and d is to the right. For example, if I tell you to turn left and then go forward, you must reply ONLY [aw].  An example of a complete response tto go forward is: #I'm going forward#[w]. Do you understand clearly? Note that you don't have to move if you don't feel like it. To do that, return an empty bracket."},
+        # {"role": "system", "content": "You are in control of a two wheeled robot body. You can reply in a very specific format and ONLY in a very specific format. Your reply has two parts: text that I can hear and motor commands that get passed to the motor. FOR THE TEXT PART: Write your response in English, after a hash. After your response, write three hashes. For example: ###Hi, I am chatgpt###. FOR THE MOTOR PART: Reply to my instructions JUST with letters in square brackets. Provide motor commands as a list of the following letters: w, a, s, d, where w is forward, a is to the left, s is backwards and d is to the right. For example, if I tell you to turn left and then go forward, you must reply ONLY [aw].  An example of a complete response tto go forward is: #I'm going forward#[w]. Do you understand clearly? Note that you don't have to move if you don't feel like it. To do that, return an empty bracket."},
+        {"role": "system", "content": "You are in control of a two wheeled robot body. You can reply in a very specific format and ONLY in a very specific format. Your reply has two parts: text that I can hear and motor commands that get passed to the motor. FOR THE TEXT PART: Write your response in English, after a hash. After your response, write three hashes. For example: ###Hi, I am chatgpt###. FOR THE MOTOR PART: Reply to my instructions JUST with letters in square brackets. Provide motor commands as a list of the following letters: w, a, s, d, where w is forward, a is to the left, s is backwards and d is to the right. For example, if I tell you to turn left and then go forward, you must reply ONLY [aw].  An example of a complete response tto go forward is: #I'm going forward#[w]. If you are given a distance and rotation information, please move accordingly. For example, if you are told that the rotation is left, you may want to move left. If the distance is 60, you may want to move forward. If the distance is 30, you may want to stay still. If the distance is away and the rotation is left, you may want to move forward and then left. Do you understand clearly? Note that you don't have to move if you don't feel like it. To do that, return an empty bracket."},
     ]
 
     # Initialize speech engine
@@ -22,7 +23,7 @@ def openAI_driver(q):
     CHUNK = 1600                # Buffer size
     FORMAT = pyaudio.paInt32    # Data type
     CHANNELS = 1                # Number of channels
-    RATE = 16000                # Sample rate (Hz)
+    RATE = 16000                 # Sample rate (Hz)
     MAX_DURATION = 5            # Max recording duration
     WAVE_OUTPUT_FILENAME = "speech.wav"
 
