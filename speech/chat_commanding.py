@@ -62,7 +62,10 @@ def openAI_driver(q):
             # Speak reply
             engine.say(ext_chr_string(reply))
             engine.runAndWait()
-            screen.addstr(8, 0, "NB3: {0}\n".format(reply), curses.A_NORMAL)
+            try:
+                screen.addstr(8, 0, "NB3: {0}\n".format(reply), curses.A_NORMAL)
+            except curses.error:
+                pass
             screen.refresh()
 
     finally:

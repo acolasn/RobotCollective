@@ -212,7 +212,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     frame_pil = Image.open(BytesIO(frame))
                     qr_decode_output, returning_points = read_qr_code_from_PIL(frame_pil)
 
-                    # print(qr_decode_output)
+                    print(qr_decode_output)
                     if qr_decode_output is not None:
                         frame_numpy = np.array(frame_pil)
 
