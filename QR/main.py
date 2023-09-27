@@ -182,6 +182,10 @@ class StreamingOutput(io.BufferedIOBase):
 
 logger = create_my_logger(logger_name="qr_logger")
 class StreamingHandler(server.BaseHTTPRequestHandler):
+    def __init__(self, queue):
+        super().__init__(self, request, client_address, server)
+        self.queue = queue
+
     def do_GET(self):
         qr_cache = [None for _ in range(30)]
         readed_qr = False
@@ -231,6 +235,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
                         centroid = np.mean(np.array([[x['center_x'], x['center_y']] for x in qr_cache if x is not None]), axis = 0)
                         distance = np.mean([x['distance'] for x in qr_cache if x is not None])
+                        queue.put(centroid)
                         # print(centroid)
                         # print(distance)
                         # print(qr_decode_output)
@@ -250,7 +255,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         readed_qr = True
                     else:
                         readed_qr = False
-                    
+                    queue.put(centroid)
                     if readed_qr:
                         print(distance)
                         if distance > 30:
@@ -278,6 +283,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
+    def __init__(self, address, streaming_handler, queue=None):
+        super().__init__(address, streaming_handler)
+        self.queue = queue
+    
     allow_reuse_address = True
     daemon_threads = True
 
@@ -287,10 +296,10 @@ picam2.configure(camera_config)
 output = StreamingOutput()
 picam2.start_recording(MJPEGEncoder(), FileOutput(output))
 
-def run_qr_detection():
+def run_qr_detection(queue):
     try:
         address = ('', 8000)
-        server = StreamingServer(address, StreamingHandler)
+        server = StreamingServer(address, StreamingHandler, queue)
         server.serve_forever()
     finally:
         picam2.stop_recording()
