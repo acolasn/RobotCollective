@@ -19,6 +19,7 @@ def openAI_driver(q):
 
     # Get user name
     username = os.getlogin()
+    model = 'en_US-amy-low.onnx'
 
     # Specify paths
     repo_path = '/home/' + username + '/RobotCollective'
@@ -119,7 +120,7 @@ def openAI_driver(q):
             
             url = 'http://34.22.159.200:5000/convert'
             try:
-                response = requests.post(url, data={'text': speech})
+                response = requests.post(url, data={'text': speech, 'model': model})
             except:
                 amt = random.uniform(0,0.1)
                 time.sleep(amt)
