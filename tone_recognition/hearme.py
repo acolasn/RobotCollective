@@ -91,7 +91,7 @@ def start_recording(matching_target):
     return frames, recording, record_starting_time, detected_person, detected_wav_file
 
 def stop_recording(detected_wav_file, frames):
-    print("Recording stopped due to continuous tone...")
+    print("Recording stopped due to continuous tone.")
     # print(f"You are listening to {detected_person}")
 
     # Save the recorded audio to the corresponding WAV file
@@ -102,7 +102,8 @@ def stop_recording(detected_wav_file, frames):
         wf.setframerate(RATE)
         wf.writeframes(b''.join(frames))
         wf.close()
-
+    # elif detected_wav_file is None:
+    #     recording=False
     recording = False
     detected_person = None
     detected_wav_file = None
@@ -145,7 +146,7 @@ def HearMe():
 
         # Initialize variables for recording duration and maximum recording time
         record_starting_time = 0
-        max_recording_time = 90  # Maximum recording time (in seconds)
+        max_recording_time = 60  # Maximum recording time (in seconds)
 
         while True:
             # Read audio data from the stream
@@ -172,7 +173,7 @@ def HearMe():
                     # Continuous tone detected
                     if start_time is None:
                         start_time = time.time()
-                    elif time.time() - start_time >= 2:
+                    elif time.time() - start_time >= 1.5:
                         if not recording:
                             frames, recording, record_starting_time, detected_person, detected_wav_file = start_recording(matching_target)
                         else:  # is recording
@@ -190,11 +191,15 @@ def HearMe():
 
             if recording:
                 frames.append(raw_data)  # Record audio
+            
+            else:
+                record_starting_time = 0
 
-            # Check for maximum recording time (90 seconds)
-            if record_starting_time - time.time() >= max_recording_time:
+            # Check for maximum recording time (60 seconds)
+            if time.time() - record_starting_time >= 60 and record_starting_time != 0:#max_recording_time:
                 recording, detected_person, detected_wav_file = stop_recording(
                     detected_wav_file, frames)
+                
 
     except KeyboardInterrupt:
         pass

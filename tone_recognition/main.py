@@ -11,7 +11,7 @@ def recognize_speech(data_queue, command_queue):
             command_queue.put('SPEAK')
 
 
-if __file__ == "__main__":
+if __name__ == "__main__":
     print('hear me')
     HearMe()
     print('here me done. now understand me')
