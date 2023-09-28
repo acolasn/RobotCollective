@@ -6,11 +6,12 @@ import QR.main_w_queue as main
 
 # Create a new queue
 data_queue = queue.Queue()
+qr_queue = queue.Queue()
 
 # Create two threads
-t1 = threading.Thread(target= chat_commanding.openAI_driver, args=(data_queue,))
-t2 = threading.Thread(target= chat_driving.chat_driver, args=(data_queue,))
-t3 = threading.Thread(target= main.run_qr_detection, args= (data_queue,))
+t1 = threading.Thread(target= chat_commanding.openAI_driver, args=(data_queue, qr_queue))
+t2 = threading.Thread(target= chat_driving.chat_driver, args=(data_queue, ))
+t3 = threading.Thread(target= main.run_qr_detection, args= (qr_queue,))
 
 # Start the threads
 t1.start()

@@ -5,9 +5,7 @@ import curses
 import queue
 import numpy as np
 
-def openAI_driver(q):
-    if not q.empty():
-        print("CHAT COMMAND: ", q.queue[-1])
+def openAI_driver(data_queue, qr_queue):
     # Set OpenAI API Key (secret!!!)
     openai.api_key = "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"
 
@@ -44,8 +42,13 @@ def openAI_driver(q):
             screen.addstr("Enter a string: ")
             screen.clrtoeol()
             curses.echo()  # Enable echoing of characters
-            command = screen.getstr().decode('utf-8')  # Get a string from user
-
+            # command = screen.getstr().decode('utf-8')  # Get a string from user
+            if len(qr_queue.queue)>0:
+                command = qr_queue.queue[-1]
+            else:
+                command = "There is no qr code yet"
+            # while not qr_queue.queue.empty():
+            qr_queue.queue.clear()
             screen.addstr(4, 0, "You: {0}\n".format(command), curses.A_STANDOUT)
 
             conversation.append({'role': 'user', 'content': f'{command}'})
@@ -60,7 +63,7 @@ def openAI_driver(q):
             # Extract and display reply
             reply = response['choices'][0]['message']['content']
             conversation.append({'role': 'assistant', 'content': f'{reply}'})
-            q.put(reply)
+            data_queue.put(reply)
             # Speak reply
             engine.say(ext_chr_string(reply))
             engine.runAndWait()
@@ -69,7 +72,6 @@ def openAI_driver(q):
             # except curses.error:
             #     pass
             screen.refresh()
-
     finally:
         # shut down
 
