@@ -19,6 +19,16 @@ You need to install zbar to read QRs. You can do it by typing
 
 `sudo apt-get install libzbar0`
 
+## tone
+for audio  install scipy through apt-get, not pip 
+`sudo apt-get install python3-scipy`
+
+
+some commands you may want to consider for debugging, but should not be necessary
+<!-- sudo apt-get update -->
+<!-- sudo apt-get install portaudio19-dev -->
+<!-- sudo apt-get install alsa-utils -->
+
 ## Collision detection rewiring
 
 We changed pin11 in the arduino from the motor's `backRight` pin to the collision detector `echoPin`. `backRight` is now in pin7. If you re-upload `driving_from_rasp_pi.ino` to your arduino, make sure you remove the cable from pin11 and put it on pin7. 
