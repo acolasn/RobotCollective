@@ -4,9 +4,7 @@ import time
 import openai
 import numpy as np
 import curses
-import pyttsx3
-import requests
-import random
+from google.cloud import texttospeech
 
 def openAI_driver(q):
 
@@ -19,7 +17,6 @@ def openAI_driver(q):
 
     # Get user name
     username = os.getlogin()
-    model = 'en_US-amy-low.onnx'
 
     # Specify paths
     repo_path = '/home/' + username + '/RobotCollective'
@@ -27,18 +24,22 @@ def openAI_driver(q):
     input_wav_path = box_path + '/_tmp/input.wav'
     output_wav_path = box_path + '/_tmp/output.wav'
 
+    
     # Specify params
     input_device = 1
     output_device = 1
     num_input_channels = 2
     num_output_channels = 1
-    sample_rate = 16000
+    sample_rate = 44100
     buffer_size = int(sample_rate / 100)
     buffer_size = int(sample_rate / 100)
     max_samples = int(sample_rate * 10)
 
     # List available sound devices
     sound.list_devices()
+
+    # Instantiates a Google TTS client
+    google_tts_client = texttospeech.TextToSpeechClient()
 
     # Initialize microphone
     microphone = sound.microphone(input_device, num_input_channels, 'int32', sample_rate, buffer_size, max_samples)
@@ -56,16 +57,12 @@ def openAI_driver(q):
 
     # Initialize conversation history
     conversation = [
-        {"role": "system", "content": "You are in control of a two wheeled robot body. You can reply in a very specific format and ONLY in a very specific format. Your reply has two parts: text that I can hear and motor commands that get passed to the motor. FOR THE TEXT PART: Write your response in English, after a hash. After your response, write a hash. For example: #Hi, I am chatgpt#. FOR THE MOTOR PART: Reply to my instructions JUST with letters in square brackets. Provide motor commands as a list of the following letters: w, a, s, d, where w is forward, a is to the left, s is backwards and d is to the right. For example, if I tell you to turn left and then go forward, you must reply ONLY [aw].  An example of a complete response tto go forward is: #I'm going forward#[w]. Do you understand clearly? Note that you don't have to move if you don't feel like it. To do that, return an empty bracket. You must return brackets every time."},
+        {"role": "system", "content": "You are in control of a two wheeled robot body. You can reply in a very specific format and ONLY in a very specific format. Your reply has two parts: text that I can hear and motor commands that get passed to the motor. FOR THE TEXT PART: Write your response in English, after a hash. After your response, write a hash. For example: #Hi, I am chatgpt#. FOR THE MOTOR PART: Reply to my instructions JUST with letters in square brackets. Provide motor commands as a list of the following letters: w, a, s, d, where w is forward, a is to the left, s is backwards and d is to the right. For example, if I tell you to turn left and then go forward, you must reply ONLY [aw].  An example of a complete response tto go forward is: #I'm going forward#[w]. Do you understand clearly? Note that you don't have to move if you don't feel like it. To do that, return an empty bracket. You must return brackets after every time."},
     ]
-
-    # Initialize speech engine
-    engine = pyttsx3.init()
 
     # Setup the curses screen window
     screen = curses.initscr()    
     # ---------------------------------------------------------------------------------------------------------------------------------------------------
-
 
     # --------------------------------------------------------------------------------
     # Chat Loop
@@ -118,15 +115,13 @@ def openAI_driver(q):
             # Speak reply
             speech = ext_chr_string(reply)
             
-            url = 'http://34.22.159.200:5000/convert'
-            try:
-                response = requests.post(url, data={'text': speech, 'model': model})
-            except:
-                amt = random.uniform(0,0.1)
-                time.sleep(amt)
-                response = requests.post(url, data={'text': speech, 'model': model})
-            with open(output_wav_path, 'wb') as f:
-                f.write(response.content)
+            # Synthesize reply
+            synthesis_input = texttospeech.SynthesisInput(text=speech)
+            voice = texttospeech.VoiceSelectionParams(language_code="en-GB", ssml_gender=texttospeech.SsmlVoiceGender.FEMALE)
+            audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.LINEAR16, sample_rate_hertz=44100)
+            response = google_tts_client.synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config)
+            with open(output_wav_path, "wb") as out:
+                out.write(response.audio_content)
 
             speaker.play_wav(output_wav_path)
             screen.addstr(8, 0, "NB3: {0}\n".format(reply), curses.A_NORMAL)
