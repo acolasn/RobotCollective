@@ -91,11 +91,10 @@ response_format = [
     }
 ]
 
-def play_tone(is_talking2others=False):
-    if is_talking2others:
-        p = pyaudio.PyAudio()
-        p.open(format=p.get_format_from_width(wave.open(tone_path).getsampwidth()), channels=wave.open(tone_path).getnchannels(), rate=wave.open(tone_path).getframerate(), output=True).write(wave.open(tone_path).readframes(-1))
-        p.terminate()
+def play_tone(tone_path):
+    p = pyaudio.PyAudio()
+    p.open(format=p.get_format_from_width(wave.open(tone_path).getsampwidth()), channels=wave.open(tone_path).getnchannels(), rate=wave.open(tone_path).getframerate(), output=True).write(wave.open(tone_path).readframes(-1))
+    p.terminate()
 
 
 def openAI_driver_function(data_queue, qr_queue, recorded_audio_queue, command_queue):
@@ -137,6 +136,7 @@ def openAI_driver_function(data_queue, qr_queue, recorded_audio_queue, command_q
                 # command = screen.getstr().decode('utf-8')  # Get a string from user
                 if len(qr_queue.queue)>0:
                     command = qr_queue.queue[-1]
+                    command_queue.put("INITIATE_CONVERSATION")
                 else:
                     command = "There is no qr code yet"
                 # while not qr_queue.queue.empty():
@@ -171,7 +171,6 @@ def openAI_driver_function(data_queue, qr_queue, recorded_audio_queue, command_q
                 screen.addstr(9, 0, "NB3: {0}\n".format(reply), curses.A_NORMAL)
                 screen.refresh()
             if command_queue.queue[-1] == 'SPEAK':
-
                 what_i_heard = recorded_audio_queue.queue[-1]
                 conversation.append({'role': 'user', 'content': f'{what_i_heard}'})
 
@@ -193,11 +192,22 @@ def openAI_driver_function(data_queue, qr_queue, recorded_audio_queue, command_q
                 conversation.append({'role': 'assistant', 'content': f'{reply}'})
 
                 text_reply = reply["text"]
+                play_tone(tone_path)
                 engine.say(text_reply)
                 engine.runAndWait()
+                play_tone(tone_path)
                 screen.addstr(9, 0, "NB3: {0}\n".format(reply), curses.A_NORMAL)
                 screen.refresh()
                 time.sleep(1)
+            if command_queue.queue[-1] == "INITIATE_CONVERSATION":
+                text = "Hello, this is a robot talking. How are you doing?"
+                play_tone(tone_path)
+                engine.say(text)
+                engine.runAndWait()
+                play_tone(tone_path)
+                time.sleep(1)
+                command_queue.put("LISTEN")
+                
 
     finally:
         # shut down

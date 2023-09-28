@@ -26,6 +26,8 @@ def chat_driver(q, command_queue):
                     ser.write(b'd')
                 elif char == 'l':
                     ser.write(b'l')
+        else:
+            ser.write(b'm')
 
 def extract_characters(s):
     # Check if the string starts with '[' and ends with ']'
