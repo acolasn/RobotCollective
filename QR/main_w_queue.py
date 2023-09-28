@@ -248,7 +248,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         if distance > 30:
                             chat_prompt += "distance is {}".format(int(distance))
                             
-                        queue.put(chat_prompt)
+                        queue.put(str((qr_decode_output, distance, centroid[1])))
                         # queue.put("#move forward#[w]")
                         print("QUEUE: ", queue.queue[-1])
                         
