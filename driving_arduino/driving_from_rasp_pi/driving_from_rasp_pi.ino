@@ -221,24 +221,29 @@ void drive_rasp_pi(){
     if (instruction == 'w'){
         direction = 2;
         turn = 0;
+        speed = 255;
     }
     if (instruction == 's'){
         direction = 1;
         turn = 0;
+        speed = 255;
     }
     if (instruction == 'a'){
         direction = 0;
         turn = 1;
+        speed = 150;
     }
     if (instruction == 'd'){
         direction = 0;
         turn = 2;
+        speed = 150;
     }
     if (instruction == 'v'){
         direction = 0;
         turn = 0;
+        speed = 0;
     }
-    drive(direction = direction, turn = turn, speed = 255);
+    drive(direction = direction, turn = turn, speed = speed);
 }
 
 void loop(){
@@ -255,7 +260,12 @@ void loop(){
           lostMode();
        }
         else{
-            duration = 100;
+            if (instruction == 'a' || instruction == 'd'){
+              duration = 50;
+            }
+            else{
+              duration = 100;
+            }
             drive_rasp_pi();
         }
       previousMillis = millis();
