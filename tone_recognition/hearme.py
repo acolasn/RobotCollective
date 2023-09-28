@@ -3,6 +3,7 @@ import numpy as np
 from scipy.signal import butter, lfilter
 import wave
 import time
+import queue
 
 # Set sound recording format
 CHUNK = 1600                # Buffer size
@@ -82,7 +83,8 @@ def calculate_average_frequency(filtered_audio_data, num_ffts=5):
     return average_frequency
 
 
-def start_recording(matching_target):
+def start_recording(matching_target, command_queue):
+    command_queue.put('LISTEN')
     detected_person, detected_wav_file = PEOPLE[matching_target]
     print(
         f"Recording started for {detected_person}...")
@@ -113,10 +115,12 @@ def stop_recording(detected_wav_file, frames):
     return recording, detected_person, detected_wav_file
 
 
-def HearMe():
+def HearMe(command_queue=None):
     """
     record audio and save it to a WAV file
     """
+    if not command_queue:
+        command_queue = queue.Queue()
     # Initialize variables for recording and note detection
     recording = False
     frames = []
@@ -179,7 +183,7 @@ def HearMe():
                     elif time.time() - start_time >= 1.5:
                         if not recording:
                             frames, recording, record_starting_time, detected_person, detected_wav_file = start_recording(
-                                matching_target)
+                                matching_target, command_queue)
                         else:  # is recording
                             recording, detected_person, detected_wav_file = stop_recording(
                                 detected_wav_file, frames)

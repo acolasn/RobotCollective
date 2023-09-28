@@ -4,8 +4,8 @@ from understandme import UnderstandMe
 
 def recognize_speech(data_queue, command_queue):
     while True:
-        if command_queue.queue[-1] == 'HEARME':
-            HearMe()
+        if command_queue.queue[-1] == 'SEARCH':
+            HearMe(command_queue)
             transcript = UnderstandMe()
             data_queue.put(transcript)
             command_queue.put('SPEAK')

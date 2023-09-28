@@ -8,13 +8,13 @@ import tone_recognition.main as tone_recognition
 # Create a new queue
 chatgpt_queue = queue.Queue()
 recorded_audio_queue = queue.Queue()
-audio_command_queue = queue.Queue()
-audio_command_queue.put('HEARME')
+command_queue = queue.Queue()
+command_queue.put('SEARCH')
 
-# Commands
-# 'HEARME'
-# 'SPEAK'
-# 'SEARCH'
+# audio commands
+# 'LISTEN' : when hear the tone, stop the motor
+# 'SPEAK' : after transcribing the detected audio, speak
+# 'SEARCH' : search for robots
 
 # Create two threads
 t1 = threading.Thread(
@@ -22,7 +22,8 @@ t1 = threading.Thread(
 t2 = threading.Thread(target=chat_driving.chat_driver, args=(chatgpt_queue,))
 t3 = threading.Thread(target=main.run_qr_detection)
 t4 = threading.Thread(
-    target=tone_recognition.recognize_speech, args=(recorded_audio_queue, audio_command_queue))
+    target=tone_recognition.recognize_speech, args=(recorded_audio_queue, command_queue))
+
 # Start the threads
 t1.start()
 t2.start()
