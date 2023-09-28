@@ -182,7 +182,9 @@ class StreamingOutput(io.BufferedIOBase):
 
 logger = create_my_logger(logger_name="qr_logger")
 class StreamingHandler(server.BaseHTTPRequestHandler):
+
     def do_GET(self):
+        queue = self.server.queue
         qr_cache = [None for _ in range(30)]
         readed_qr = False
         if self.path == '/':
@@ -205,60 +207,50 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.end_headers()
             try:
                 while True:
-                    # with Timer() as t:
                     with output.condition:
                         output.condition.wait()
                         frame = output.frame
                     frame_pil = Image.open(BytesIO(frame))
                     qr_decode_output, returning_points = read_qr_code_from_PIL(frame_pil)
 
-                    # print(qr_decode_output)
                     if qr_decode_output is not None:
                         frame_numpy = np.array(frame_pil)
 
                         center_x = (returning_points[0].x + returning_points[2].x)/2
                         center_y = (returning_points[0].y + returning_points[2].y)/2
                         area = (returning_points[2].x - returning_points[0].x) * (returning_points[2].y - returning_points[0].y)
-                        # distance = calculate_distance_of_qr(area, "linear")
+
                         distance_of_qr = calculate_distance_qr_main_resolution(area)
                         qr_dict = {"qr_info": qr_decode_output, "distance": distance_of_qr, "center_x": center_x, "center_y": center_y}
                         qr_cache.append(qr_dict)
-                        # logger.info("CENTER x: {}".format(center_x))
-                        # logger.info("CENTER y {}".format(center_y))
-                        # logger.info("AREA: {}".format(area))
-                        # logger.info("DISTANCE: {}".format(distance))
-                        # print("CENTER x: {}".format(center_x))
 
                         centroid = np.mean(np.array([[x['center_x'], x['center_y']] for x in qr_cache if x is not None]), axis = 0)
                         distance = np.mean([x['distance'] for x in qr_cache if x is not None])
-                        # print(centroid)
-                        # print(distance)
-                        # print(qr_decode_output)
-                        # print("AREA: {}".format(area))
+
                         frame_numpy[int(centroid[1]-10):int(centroid[1]+10),int(centroid[0]-10):int(centroid[0]+10),:] = 0
                         frame = image_to_byte_array(Image.fromarray(frame_numpy))
-                        # print("CENTER y {}".format(center_y))
-                        # print("AREA: {}".format(area))
-                        # print("DISTANCE: {}".format(distance))
-                        # print("Number of nans: {}".format(qr_cache.count(None)))
+
                     else:
                         qr_cache.append(None)
                         
                     qr_cache.pop(0)
-                    # print("Number of nans: {}".format(qr_cache.count(None)))
                     if qr_cache.count(None) < 7:
                         readed_qr = True
                     else:
                         readed_qr = False
                     
+                    chat_prompt = ""
                     if readed_qr:
-                        print(distance)
-                        if distance > 30:
-                            print("move forward")
                         if centroid[0] - 320 > 50:
-                            print("move right")
+                            chat_prompt += "rotation is right"
                         elif centroid[0] - 320 < -50:
-                            print("move left")
+                            chat_prompt += "rotation is left"
+                        if distance > 30:
+                            chat_prompt += "distance is {}".format(int(distance))
+                            
+                        queue.put(str((qr_decode_output, distance, centroid[1])))
+                        # queue.put("#move forward#[w]")
+                        print("QUEUE: ", queue.queue[-1])
                         
                     # print(readed_qr)
                     self.wfile.write(b'--FRAME\r\n')
@@ -275,6 +267,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         else:
             self.send_error(404)
             self.end_headers()
+        self.server.queue = queue
 
 
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
@@ -287,13 +280,17 @@ picam2.configure(camera_config)
 output = StreamingOutput()
 picam2.start_recording(MJPEGEncoder(), FileOutput(output))
 
-def run_qr_detection():
+def run_qr_detection(queue):
     try:
         address = ('', 8000)
         server = StreamingServer(address, StreamingHandler)
+        server.queue = queue
         server.serve_forever()
     finally:
         picam2.stop_recording()
 
 if __name__ == "__main__":
-    run_qr_detection()
+    import queue
+    # Create a new queue
+    data_queue = queue.Queue()
+    run_qr_detection(data_queue)

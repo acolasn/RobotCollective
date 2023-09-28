@@ -162,3 +162,5 @@ cython_debug/
 .egg-info
 __pycache__
 Loggers/*
+*degub*
+
