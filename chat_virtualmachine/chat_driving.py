@@ -10,11 +10,8 @@ def chat_driver(q):
 
     while True:
         command = q.get()
-        command = command['motor_commands']
-        print("QUEUE:", command)
-        commands = [*command]
+        commands = ext_chr_motor(command)
         for char in commands:
-            print(f"THIS IS THE COMMAND: {char}")
             if char == 'w':
                 ser.write(b'w')  # Send byte to Arduino
             elif char == 's':
@@ -23,8 +20,6 @@ def chat_driver(q):
                 ser.write(b'a')
             elif char == 'd':
                 ser.write(b'd')
-            elif char == 'l':
-                ser.write(b'l')
 
 def extract_characters(s):
     # Check if the string starts with '[' and ends with ']'
