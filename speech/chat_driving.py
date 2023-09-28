@@ -10,8 +10,11 @@ def chat_driver(q):
 
     while True:
         command = q.get()
-        commands = ext_chr_motor(command)
+        command = command['motor_commands']
+        print("QUEUE:", command)
+        commands = [*command]
         for char in commands:
+            print(f"THIS IS THE COMMAND: {char}")
             if char == 'w':
                 ser.write(b'w')  # Send byte to Arduino
             elif char == 's':
