@@ -109,20 +109,12 @@ def openAI_driver_function(data_queue, qr_queue, recorded_audio_queue, command_q
     output_device = 1
     num_input_channels = 2
     num_output_channels = 1
-    sample_rate = 96000
-    buffer_size = int(sample_rate / 100)
-    buffer_size = int(sample_rate / 100)
-    max_samples = int(sample_rate * 10)
 
     # List available sound devices
     sound.list_devices()
 
     # Instantiates a Google TTS client
     google_tts_client = texttospeech.TextToSpeechClient()
-
-    # Initialize speaker
-    speaker = sound.speaker(output_device, num_output_channels, 'int16', sample_rate, buffer_size)
-    speaker.start()
 
     # Clear error ALSA/JACK messages from terminal
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -146,6 +138,13 @@ def openAI_driver_function(data_queue, qr_queue, recorded_audio_queue, command_q
     try:
         while True:
             if command_queue.queue[-1] == 'SEARCH':
+
+                # Initialize speaker
+                sample_rate = 44100
+                buffer_size = int(sample_rate / 100)
+                speaker = sound.speaker(output_device, num_output_channels, 'int16', sample_rate, buffer_size)
+                speaker.start()
+
                 screen.addstr("Enter a string: ")
                 screen.clrtoeol()
                 curses.echo()  # Enable echoing of characters
@@ -170,18 +169,12 @@ def openAI_driver_function(data_queue, qr_queue, recorded_audio_queue, command_q
                     function_call= {"name":"talk_and_move_as_a_robot"}
                 )
                 # Extract and display reply
+                response_message = response.choices[0].message
                 if response_message.get("function_call"):
-                    #print("OH THERE IS A FUNCTION CALL")
-                    #print(response_message.get("function_call"))
-                    #print(response["choices"][0]["message"]["function_call"]["arguments"])
-                    uncleaned_response = response["choices"][0]["message"]["function_call"]["arguments"]
-                    cleaned_response_str = uncleaned_response.replace("'", '"')
-                    #print('cleaned_response_str: {0}'.format(cleaned_response_str))
-                    reply = json.loads(cleaned_response_str)
-                    #print(reply)
+                    print("OH THERE IS A FUNCTION CALL")
+                    print(response_message.get("function_call"))
+                    reply = json.loads(response["choices"][0]["message"]["function_call"]["arguments"])
                     data_queue.put(reply)
-
-
                 #reply = json.loads(response["choices"][0]["message"]["function_call"]["arguments"])
                 conversation.append({'role': 'assistant', 'content': f'{reply}'})
                 #data_queue.put(reply)
@@ -200,8 +193,16 @@ def openAI_driver_function(data_queue, qr_queue, recorded_audio_queue, command_q
                 while speaker.is_playing():
                     time.sleep(0.1)
                 screen.refresh()
+                speaker.stop()
             
             if command_queue.queue[-1] == 'SPEAK':
+                
+                # Initialize speaker
+                sample_rate = 96000
+                buffer_size = int(sample_rate / 100)
+                speaker = sound.speaker(output_device, num_output_channels, 'int16', sample_rate, buffer_size)
+                speaker.start()
+
                 what_i_heard = recorded_audio_queue.queue[-1]
                 conversation.append({'role': 'user', 'content': f'{what_i_heard}'})
 
@@ -239,8 +240,17 @@ def openAI_driver_function(data_queue, qr_queue, recorded_audio_queue, command_q
                 while speaker.is_playing():
                     time.sleep(0.1)
                 screen.refresh()
+
+                speaker.stop()
             
             if command_queue.queue[-1] == "INITIATE_CONVERSATION":
+
+                # Initialize speaker
+                sample_rate = 44100
+                buffer_size = int(sample_rate / 100)
+                speaker = sound.speaker(output_device, num_output_channels, 'int16', sample_rate, buffer_size)
+                speaker.start()
+
                 speech = "Hello, this is a robot talking. How are you doing?"
                 synthesis_input = texttospeech.SynthesisInput(text=speech)
                 voice = texttospeech.VoiceSelectionParams(language_code="en-GB", ssml_gender=texttospeech.SsmlVoiceGender.FEMALE)
@@ -259,6 +269,8 @@ def openAI_driver_function(data_queue, qr_queue, recorded_audio_queue, command_q
                     time.sleep(0.1)
                 screen.refresh()
                 command_queue.put("LISTEN")
+
+                speaker.stop()
 
     finally:
         # Shutdown microphone
