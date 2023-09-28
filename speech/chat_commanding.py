@@ -6,6 +6,7 @@ import curses
 import queue
 import numpy as np
 import json 
+import time
 
 response_format = [
     {
@@ -21,14 +22,25 @@ response_format = [
           "motor_commands": {
             "type": "string",
             "description": "A string composed of the characters w (forward), a (turn left), s (go backwards) and d (turn right)"
+          },
+          "bool_leave": {
+            "type": "string",
+            "description": "Whether to end the conversation.",
+            "enum": ["yes", "no"]
           }
         }
       }
     }
 ]
 
+def play_tone(is_talking2others=False):
+    if is_talking2others:
+        p = pyaudio.PyAudio()
+        p.open(format=p.get_format_from_width(wave.open(tone_path).getsampwidth()), channels=wave.open(tone_path).getnchannels(), rate=wave.open(tone_path).getframerate(), output=True).write(wave.open(tone_path).readframes(-1))
+        p.terminate()
 
-def openAI_driver_function(data_queue, qr_queue):
+
+def openAI_driver_function(data_queue, qr_queue, recorded_audio_queue, command_queue):
     # Set OpenAI API Key (secret!!!)
     openai.api_key = "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"
 
@@ -60,50 +72,75 @@ def openAI_driver_function(data_queue, qr_queue):
     # --------------------------------------------------------------------------------
     try:
         while True:
+            if command_queue.queue[-1] == 'SEARCH':
+                screen.addstr("Enter a string: ")
+                screen.clrtoeol()
+                curses.echo()  # Enable echoing of characters
+                # command = screen.getstr().decode('utf-8')  # Get a string from user
+                if len(qr_queue.queue)>0:
+                    command = qr_queue.queue[-1]
+                else:
+                    command = "There is no qr code yet"
+                # while not qr_queue.queue.empty():
+                qr_queue.queue.clear()
+                screen.addstr(4, 0, "You: {0}\n".format(command), curses.A_STANDOUT)
 
-            screen.addstr("Enter a string: ")
-            screen.clrtoeol()
-            curses.echo()  # Enable echoing of characters
-            # command = screen.getstr().decode('utf-8')  # Get a string from user
-            if len(qr_queue.queue)>0:
-                command = qr_queue.queue[-1]
-            else:
-                command = "There is no qr code yet"
-            # while not qr_queue.queue.empty():
-            qr_queue.queue.clear()
-            screen.addstr(4, 0, "You: {0}\n".format(command), curses.A_STANDOUT)
+                conversation.append({'role': 'user', 'content': f'{command}'})
+                
+                # Get ChatGPT response
+                response = openai.ChatCompletion.create(
+                    model="gpt-4-0613",
+                    temperature=0.2,
+                    messages=conversation, 
+                    functions = response_format,
+                    function_call= {"name":"talk_and_move_as_a_robot"}
+                )
+                # Extract and display reply
+                response_message = response.choices[0].message
+                if response_message.get("function_call"):
+                    print("OH THERE IS A FUNCTION CALL")
+                    print(response_message.get("function_call"))
+                    reply = json.loads(response["choices"][0]["message"]["function_call"]["arguments"])
+                    data_queue.put(reply)
+                #reply = json.loads(response["choices"][0]["message"]["function_call"]["arguments"])
+                conversation.append({'role': 'assistant', 'content': f'{reply}'})
+                #data_queue.put(reply)
+                # Speak reply
+                # speak
+                text_reply = reply["text"]
+                engine.say(text_reply)
+                engine.runAndWait()
+                screen.addstr(9, 0, "NB3: {0}\n".format(reply), curses.A_NORMAL)
+                screen.refresh()
+            if command_queue.queue[-1] == 'SPEAK':
 
-            conversation.append({'role': 'user', 'content': f'{command}'})
-            
-            # Get ChatGPT response
-            response = openai.ChatCompletion.create(
-                model="gpt-4-0613",
-                temperature=0.2,
-                messages=conversation, 
-                functions = response_format,
-                function_call= {"name":"talk_and_move_as_a_robot"}
-            )
-            # Extract and display reply
-            response_message = response.choices[0].message
-            if response_message.get("function_call"):
-                print("OH THERE IS A FUNCTION CALL")
-                print(response_message.get("function_call"))
-                reply = json.loads(response["choices"][0]["message"]["function_call"]["arguments"])
-                data_queue.put(reply)
-            #reply = json.loads(response["choices"][0]["message"]["function_call"]["arguments"])
-            conversation.append({'role': 'assistant', 'content': f'{reply}'})
-            #data_queue.put(reply)
-            # Speak reply
-            # start tone
-            p = pyaudio.PyAudio(); p.open(format=p.get_format_from_width(wave.open(tone_path).getsampwidth()), channels=wave.open(tone_path).getnchannels(), rate=wave.open(tone_path).getframerate(), output=True).write(wave.open(tone_path).readframes(-1)); p.terminate()
-            # speak
-            text_reply = reply["text"]
-            engine.say(text_reply)
-            engine.runAndWait()
-            # end tone
-            p = pyaudio.PyAudio(); p.open(format=p.get_format_from_width(wave.open(tone_path).getsampwidth()), channels=wave.open(tone_path).getnchannels(), rate=wave.open(tone_path).getframerate(), output=True).write(wave.open(tone_path).readframes(-1)); p.terminate()
-            screen.addstr(9, 0, "NB3: {0}\n".format(reply), curses.A_NORMAL)
-            screen.refresh()
+                what_i_heard = recorded_audio_queue.queue[-1]
+                conversation.append({'role': 'user', 'content': f'{what_i_heard}'})
+
+                # Get ChatGPT response
+                response = openai.ChatCompletion.create(
+                    model="gpt-4-0613",
+                    temperature=0.2,
+                    messages=conversation, 
+                    functions = response_format,
+                    function_call= {"name":"talk_and_move_as_a_robot"}
+                )
+
+                response_message = response.choices[0].message
+                if response_message.get("function_call"):
+                    reply = json.loads(response["choices"][0]["message"]["function_call"]["arguments"])
+                    if reply.get("bool_leave"):
+                        if reply["bool_leave"] == "yes":
+                            command_queue.put("SEARCH")
+                conversation.append({'role': 'assistant', 'content': f'{reply}'})
+
+                text_reply = reply["text"]
+                engine.say(text_reply)
+                engine.runAndWait()
+                screen.addstr(9, 0, "NB3: {0}\n".format(reply), curses.A_NORMAL)
+                screen.refresh()
+                time.sleep(1)
+
     finally:
         # shut down
 
