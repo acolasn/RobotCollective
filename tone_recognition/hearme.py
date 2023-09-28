@@ -14,6 +14,23 @@ RATE = 16000                # Sample rate (Hz)
 LOWCUT = 150                # Low cutoff frequency (Hz)
 HIGHCUT = 4000              # High cutoff frequency (Hz)
 
+TARGET_FREQUENCIES = [(439, 1), (523, 1), (554, 1), (587, 1), (622, 1), (
+    659, 1), (698, 1), (739, 1.5), (783, 3), (830, 1)]  # B,C, D, D sharp, E, F, G
+
+# Map target frequencies to people and their corresponding WAV file names
+PEOPLE = {
+    439: ("Arya", "arya.wav"),
+    523: ("Antonio", "antonio.wav"),
+    554: ("Vince", 'vince.wav'),
+    587: ("Meg", "meg.wav"),
+    622: ("Vasco", "vasco.wav"),
+    659: ("Cris", "cris.wav"),
+    698: ("Orsi", "orsi.wav"),
+    739: ('Bariscan', 'bariscan.wav'),
+    783: ("Francesca", "francesca.wav"),
+    830: ("Masahiro", "masahiro.wav")
+}
+
 # Initialize PyAudio
 pya = pyaudio.PyAudio()
 
@@ -64,6 +81,33 @@ def calculate_average_frequency(filtered_audio_data, num_ffts=5):
 
     return average_frequency
 
+def start_recording(matching_target):
+    detected_person, detected_wav_file = PEOPLE[matching_target]
+    print(
+        f"Recording started for {detected_person}...")
+    frames = []  # Clear frames
+    recording = True
+    record_starting_time = time.time()
+    return frames, recording, record_starting_time, detected_person, detected_wav_file
+
+def stop_recording(detected_wav_file, frames):
+    print("Recording stopped due to continuous tone...")
+    # print(f"You are listening to {detected_person}")
+
+    # Save the recorded audio to the corresponding WAV file
+    if detected_wav_file is not None:
+        wf = wave.open(detected_wav_file, 'wb')
+        wf.setnchannels(CHANNELS)
+        wf.setsampwidth(2)
+        wf.setframerate(RATE)
+        wf.writeframes(b''.join(frames))
+        wf.close()
+
+    recording = False
+    detected_person = None
+    detected_wav_file = None
+
+    return recording, detected_person, detected_wav_file
 
 def HearMe():
     """
@@ -74,22 +118,6 @@ def HearMe():
     frames = []
 
     # Target note frequencies with tolerance
-    TARGET_FREQUENCIES = [(439, 1), (523, 1), (554, 1), (587, 1), (622, 1), (
-        659, 1), (698, 1), (739, 1.5), (783, 3), (830, 1)]  # B,C, D, D sharp, E, F, G
-
-    # Map target frequencies to people and their corresponding WAV file names
-    PEOPLE = {
-        439: ("Arya", "arya.wav"),
-        523: ("Antonio", "antonio.wav"),
-        554: ("Vince", 'vince.wav'),
-        587: ("Meg", "meg.wav"),
-        622: ("Vasco", "vasco.wav"),
-        659: ("Cris", "cris.wav"),
-        698: ("Orsi", "orsi.wav"),
-        739: ('Bariscan', 'bariscan.wav'),
-        783: ("Francesca", "francesca.wav"),
-        830: ("Masahiro", "masahiro.wav")
-    }
 
     # Initialize the detected person and WAV file name
     detected_person = None
@@ -150,6 +178,7 @@ def HearMe():
                         else:  # is recording
                             recording, detected_person, detected_wav_file = stop_recording(
                                 detected_wav_file, frames)
+                        start_time = None
                 else:
                     # New tone detected
                     detected_tone = matching_target
@@ -187,34 +216,7 @@ def HearMe():
 
         pya.terminate()
 
-    def start_recording(matching_target):
-        detected_person, detected_wav_file = PEOPLE[matching_target]
-        print(
-            f"Recording started for {detected_person}...")
-        frames = []  # Clear frames
-        recording = True
-        record_starting_time = time.time()
-        return frames, recording, record_starting_time, detected_person, detected_wav_file
-
-    def stop_recording(detected_wav_file, frames):
-        print("Recording stopped due to continuous tone...")
-        print(f"You are listening to {detected_person}")
-
-        # Save the recorded audio to the corresponding WAV file
-        if detected_wav_file is not None:
-            wf = wave.open(detected_wav_file, 'wb')
-            wf.setnchannels(CHANNELS)
-            wf.setsampwidth(2)
-            wf.setframerate(RATE)
-            wf.writeframes(b''.join(frames))
-            wf.close()
-
-        recording = False
-        detected_person = None
-        detected_wav_file = None
-
-        return recording, detected_person, detected_wav_file
-
+    
 
 if __name__ == "__main__":
     HearMe()

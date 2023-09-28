@@ -7,7 +7,7 @@ def UnderstandMe():
     OpenAI whisper function
     """
     # Define your OpenAI API key (replace 'YOUR_API_KEY' with your actual API key)
-    openai.api_key = '<secret key>'
+    openai.api_key = "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"
 
     # Read the content of the 'last_person.txt' file
     with open('last_person.txt', 'r') as last_person_file:
