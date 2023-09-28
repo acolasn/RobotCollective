@@ -9,6 +9,8 @@ def recognize_speech(data_queue, command_queue):
             transcript = UnderstandMe()
             data_queue.put(transcript)
             command_queue.put('SPEAK')
+        if command_queue.queue[-1] == 'SPEAK':
+            print('speaking now so this thread is not doing anything')
 
 
 if __name__ == "__main__":
