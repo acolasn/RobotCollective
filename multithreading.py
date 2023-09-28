@@ -19,8 +19,8 @@ qr_queue = queue.Queue()
 # 'SEARCH' : search for robots
 
 # Create two threads
-t1 = threading.Thread(target= chat_commanding.openAI_driver_function, args=(chatgpt_queue, qr_queue))
-t2 = threading.Thread(target= chat_driving.chat_driver, args=(chatgpt_queue, ))
+t1 = threading.Thread(target= chat_commanding.openAI_driver_function, args=(chatgpt_queue, qr_queue, recorded_audio_queue, command_queue))
+t2 = threading.Thread(target= chat_driving.chat_driver, args=(chatgpt_queue, command_queue))
 t3 = threading.Thread(target= main.run_qr_detection, args= (qr_queue,))
 t4 = threading.Thread(
     target=tone_recognition.recognize_speech, args=(recorded_audio_queue, command_queue))
