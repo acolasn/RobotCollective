@@ -1,10 +1,13 @@
 import openai
 import pyttsx3
 import pyaudio
+import wave
 import curses
 import queue
 import numpy as np
 
+# copy the path to your tone file (git tone branch tone_lib)
+tone_path = '/home/aryabhomick/RobotCollective/tone_recognition/tone_lib/arya_tone_439.wav'
 def openAI_driver(q):
 
     # Set OpenAI API Key (secret!!!)
@@ -60,9 +63,11 @@ def openAI_driver(q):
             conversation.append({'role': 'assistant', 'content': f'{reply}'})
             q.put(reply)
             # Speak reply
+            p = pyaudio.PyAudio(); p.open(format=p.get_format_from_width(wave.open(tone_path).getsampwidth()), channels=wave.open(tone_path).getnchannels(), rate=wave.open(tone_path).getframerate(), output=True).write(wave.open(tone_path).readframes(-1)); p.terminate()
             engine.say(ext_chr_string(reply))
             engine.runAndWait()
-            screen.addstr(8, 0, "NB3: {0}\n".format(reply), curses.A_NORMAL)
+            p = pyaudio.PyAudio(); p.open(format=p.get_format_from_width(wave.open(tone_path).getsampwidth()), channels=wave.open(tone_path).getnchannels(), rate=wave.open(tone_path).getframerate(), output=True).write(wave.open(tone_path).readframes(-1)); p.terminate()
+            screen.addstr(9, 0, "NB3: {0}\n".format(reply), curses.A_NORMAL)
             screen.refresh()
 
     finally:
