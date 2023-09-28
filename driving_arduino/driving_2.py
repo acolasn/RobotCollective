@@ -22,4 +22,6 @@ while True:
         ser.write(b'a')
     elif char == ord('d'):
         ser.write(b'd')
+    elif char == ord('l'):
+        ser.write(b'l')
 
