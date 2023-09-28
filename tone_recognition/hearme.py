@@ -81,6 +81,7 @@ def calculate_average_frequency(filtered_audio_data, num_ffts=5):
 
     return average_frequency
 
+
 def start_recording(matching_target):
     detected_person, detected_wav_file = PEOPLE[matching_target]
     print(
@@ -89,6 +90,7 @@ def start_recording(matching_target):
     recording = True
     record_starting_time = time.time()
     return frames, recording, record_starting_time, detected_person, detected_wav_file
+
 
 def stop_recording(detected_wav_file, frames):
     print("Recording stopped due to continuous tone.")
@@ -109,6 +111,7 @@ def stop_recording(detected_wav_file, frames):
     detected_wav_file = None
 
     return recording, detected_person, detected_wav_file
+
 
 def HearMe():
     """
@@ -175,10 +178,12 @@ def HearMe():
                         start_time = time.time()
                     elif time.time() - start_time >= 1.5:
                         if not recording:
-                            frames, recording, record_starting_time, detected_person, detected_wav_file = start_recording(matching_target)
+                            frames, recording, record_starting_time, detected_person, detected_wav_file = start_recording(
+                                matching_target)
                         else:  # is recording
                             recording, detected_person, detected_wav_file = stop_recording(
                                 detected_wav_file, frames)
+                            break
                         start_time = None
                 else:
                     # New tone detected
@@ -191,15 +196,14 @@ def HearMe():
 
             if recording:
                 frames.append(raw_data)  # Record audio
-            
-            else:
+            else:  # not recording
                 record_starting_time = 0
 
             # Check for maximum recording time (60 seconds)
-            if time.time() - record_starting_time >= 60 and record_starting_time != 0:#max_recording_time:
+            if time.time() - record_starting_time >= 60 and record_starting_time != 0:
                 recording, detected_person, detected_wav_file = stop_recording(
                     detected_wav_file, frames)
-                
+                break
 
     except KeyboardInterrupt:
         pass
@@ -221,7 +225,6 @@ def HearMe():
 
         pya.terminate()
 
-    
 
 if __name__ == "__main__":
     HearMe()

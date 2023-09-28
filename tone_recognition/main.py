@@ -14,6 +14,6 @@ def recognize_speech(data_queue, command_queue):
 if __name__ == "__main__":
     print('hear me')
     HearMe()
-    print('here me done. now understand me')
-    UnderstandMe()
-    print('understand me done')
+    print('hear me done. now understand me')
+    transcript = UnderstandMe()
+    print('understand me done : ', transcript)
