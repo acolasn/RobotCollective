@@ -5,7 +5,7 @@ import numpy as np
 import curses
 from pydub import AudioSegment
 from google.cloud import texttospeech
-import libs.NBB_sound as sound
+import speech.libs.NBB_sound as sound
 import importlib
 importlib.reload(sound)
 import json 
