@@ -72,7 +72,6 @@ def HearMe():
     # Initialize variables for recording and note detection
     recording = False
     frames = []
-    recording_in_progress = False  # New variable to track recording status
 
     # Target note frequencies with tolerance
     TARGET_FREQUENCIES = [(439, 1), (523, 1), (554, 1), (587, 1), (622, 1), (
@@ -117,7 +116,7 @@ def HearMe():
         stream.start_stream()
 
         # Initialize variables for recording duration and maximum recording time
-        recording_duration = 0
+        record_starting_time = 0
         max_recording_time = 90  # Maximum recording time (in seconds)
 
         while True:
@@ -130,6 +129,7 @@ def HearMe():
 
             # Calculate the average frequency of the filtered audio
             average_freq = calculate_average_frequency(filtered_audio_data)
+            print(average_freq)
 
             # Check if the frequency matches one of the target frequencies with tolerance
             matching_target = None
@@ -138,49 +138,22 @@ def HearMe():
                     matching_target = target_freq
                     break
 
-            if matching_target is not None:
+            if matching_target:
                 # Detected a tone within tolerance
                 if detected_tone == matching_target:
                     # Continuous tone detected
                     if start_time is None:
                         start_time = time.time()
-                        continuous_tone_start_time = time.time()  # Set continuous tone start time
                     elif time.time() - start_time >= 2:
-                        # Start recording if tone has been continuous for 2 seconds
-                        if not recording_in_progress:
-                            detected_person, detected_wav_file = PEOPLE[matching_target]
-                            print(
-                                f"Recording started for {detected_person}...")
-                            frames = []  # Clear frames
-                            recording = True
-                            recording_in_progress = True  # Set recording status to True
-                            start_time = time.time()  # Reset the start time
+                        if not recording:
+                            frames, recording, record_starting_time, detected_person, detected_wav_file = start_recording(matching_target)
+                        else:  # is recording
+                            recording, detected_person, detected_wav_file = stop_recording(
+                                detected_wav_file, frames)
                 else:
                     # New tone detected
                     detected_tone = matching_target
-                    start_time = time.time()
-                    if recording_in_progress:
-                        print("Recording stopped due to continuous tone...")
-                        print(f"You are listening to {detected_person}")
-
-                        # Save the recorded audio to the corresponding WAV file
-                        if detected_wav_file is not None:
-                            wf = wave.open(detected_wav_file, 'wb')
-                            wf.setnchannels(CHANNELS)
-                            wf.setsampwidth(2)
-                            wf.setframerate(RATE)
-                            wf.writeframes(b''.join(frames))
-                            wf.close()
-
-                        recording_in_progress = False  # Set recording status to False
-                        recording = False
-
-                        # Save the last detected person to the text file
-                        if detected_person is not None:
-                            with open(last_person_file, 'w') as file:
-                                file.write(detected_person)
-                        detected_person = None
-                        detected_wav_file = None
+                    start_time = None
             else:
                 # No tone detected
                 detected_tone = None
@@ -189,53 +162,16 @@ def HearMe():
             if recording:
                 frames.append(raw_data)  # Record audio
 
-                # Check for continuous tone and stop recording if detected for 2 seconds
-                if continuous_tone_start_time is not None and time.time() - continuous_tone_start_time >= 2:
-                    print("Recording stopped due to continuous tone...")
-                    print(f"You are listening to {detected_person}")
-
-                    # Save the recorded audio to the corresponding WAV file
-                    if detected_wav_file is not None:
-                        wf = wave.open(detected_wav_file, 'wb')
-                        wf.setnchannels(CHANNELS)
-                        wf.setsampwidth(2)
-                        wf.setframerate(RATE)
-                        wf.writeframes(b''.join(frames))
-                        wf.close()
-
-                    recording_in_progress = False  # Set recording status to False
-                    recording = False
-                    detected_person = None
-                    detected_wav_file = None
-
-            # Update recording duration
-            if recording_in_progress and start_time is not None:
-                recording_duration = time.time() - start_time
-
             # Check for maximum recording time (90 seconds)
-            if recording_duration >= max_recording_time:
-                print("Recording stopped after 90 seconds...")
-                print(f"You are listening to {detected_person}")
-
-                # Save the recorded audio to the corresponding WAV file
-                if detected_wav_file is not None:
-                    wf = wave.open(detected_wav_file, 'wb')
-                    wf.setnchannels(CHANNELS)
-                    wf.setsampwidth(2)
-                    wf.setframerate(RATE)
-                    wf.writeframes(b''.join(frames))
-                    wf.close()
-
-                recording_in_progress = False  # Set recording status to False
-                recording = False
-                detected_person = None
-                detected_wav_file = None
+            if record_starting_time - time.time() >= max_recording_time:
+                recording, detected_person, detected_wav_file = stop_recording(
+                    detected_wav_file, frames)
 
     except KeyboardInterrupt:
         pass
 
     finally:
-        if recording_in_progress:
+        if recording:
             print("Recording stopped due to interruption...")
         if frames:
             # Stop recording and save the recorded audio
@@ -250,6 +186,34 @@ def HearMe():
             wf.close()
 
         pya.terminate()
+
+    def start_recording(matching_target):
+        detected_person, detected_wav_file = PEOPLE[matching_target]
+        print(
+            f"Recording started for {detected_person}...")
+        frames = []  # Clear frames
+        recording = True
+        record_starting_time = time.time()
+        return frames, recording, record_starting_time, detected_person, detected_wav_file
+
+    def stop_recording(detected_wav_file, frames):
+        print("Recording stopped due to continuous tone...")
+        print(f"You are listening to {detected_person}")
+
+        # Save the recorded audio to the corresponding WAV file
+        if detected_wav_file is not None:
+            wf = wave.open(detected_wav_file, 'wb')
+            wf.setnchannels(CHANNELS)
+            wf.setsampwidth(2)
+            wf.setframerate(RATE)
+            wf.writeframes(b''.join(frames))
+            wf.close()
+
+        recording = False
+        detected_person = None
+        detected_wav_file = None
+
+        return recording, detected_person, detected_wav_file
 
 
 if __name__ == "__main__":
