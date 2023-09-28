@@ -6,7 +6,8 @@ import queue
 import numpy as np
 
 def openAI_driver(q):
-
+    if not q.empty():
+        print("CHAT COMMAND: ", q.queue[-1])
     # Set OpenAI API Key (secret!!!)
     openai.api_key = "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"
 

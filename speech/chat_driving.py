@@ -10,6 +10,7 @@ def chat_driver(q):
 
     while True:
         command = q.get()
+        print("QUEUE:", command)
         commands = ext_chr_motor(command)
         for char in commands:
             if char == 'w':
