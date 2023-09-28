@@ -1,6 +1,7 @@
 import openai
 import pyttsx3
 import pyaudio
+import wave
 import curses
 import queue
 import numpy as np
@@ -93,13 +94,15 @@ def openAI_driver_function(data_queue, qr_queue):
             conversation.append({'role': 'assistant', 'content': f'{reply}'})
             #data_queue.put(reply)
             # Speak reply
+            # start tone
+            p = pyaudio.PyAudio(); p.open(format=p.get_format_from_width(wave.open(tone_path).getsampwidth()), channels=wave.open(tone_path).getnchannels(), rate=wave.open(tone_path).getframerate(), output=True).write(wave.open(tone_path).readframes(-1)); p.terminate()
+            # speak
             text_reply = reply["text"]
             engine.say(text_reply)
             engine.runAndWait()
-            # try:
-            #screen.addstr(7, 0, "NB3: {0}\n".format(reply), curses.A_NORMAL)
-            # except curses.error:
-            #     pass
+            # end tone
+            p = pyaudio.PyAudio(); p.open(format=p.get_format_from_width(wave.open(tone_path).getsampwidth()), channels=wave.open(tone_path).getnchannels(), rate=wave.open(tone_path).getframerate(), output=True).write(wave.open(tone_path).readframes(-1)); p.terminate()
+            screen.addstr(9, 0, "NB3: {0}\n".format(reply), curses.A_NORMAL)
             screen.refresh()
     finally:
         # shut down
