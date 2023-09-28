@@ -1,5 +1,5 @@
-from hearme import HearMe
-from understandme import UnderstandMe
+from tone_recognition.hearme import HearMe
+from tone_recognition.understandme import UnderstandMe
 
 
 def recognize_speech(data_queue, command_queue):
