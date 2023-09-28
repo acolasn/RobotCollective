@@ -19,11 +19,11 @@ You need to install zbar to read QRs. You can do it by typing
 
 `sudo apt-get install libzbar0`
 
-for audio
+for audio  install scipy through apt-get, not pip 
+`sudo apt-get install python3-scipy`
+
+
+some commands you may want to consider for debugging, but should not be necessary
 <!-- sudo apt-get update -->
 <!-- sudo apt-get install portaudio19-dev -->
-
-
-sudo apt-get install python3-scipy
-<!-- sudo apt-get update -->
 <!-- sudo apt-get install alsa-utils -->
