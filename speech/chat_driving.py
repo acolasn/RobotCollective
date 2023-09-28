@@ -4,27 +4,28 @@ import curses
 import queue
 import numpy as np
 
-def chat_driver(q):
+def chat_driver(q, command_queue):
 
     ser = serial.Serial('/dev/ttyUSB0', 9600)  # Change '/dev/ttyUSB0' to your specific port
 
     while True:
-        command = q.get()
-        command = command['motor_commands']
-        print("QUEUE:", command)
-        commands = [*command]
-        for char in commands:
-            print(f"THIS IS THE COMMAND: {char}")
-            if char == 'w':
-                ser.write(b'w')  # Send byte to Arduino
-            elif char == 's':
-                ser.write(b's')
-            elif char == 'a':
-                ser.write(b'a')
-            elif char == 'd':
-                ser.write(b'd')
-            elif char == 'l':
-                ser.write(b'l')
+        if command_queue.queue[-1] == "SEARCH":
+            command = q.get()
+            command = command['motor_commands']
+            print("QUEUE:", command)
+            commands = [*command]
+            for char in commands:
+                print(f"THIS IS THE COMMAND: {char}")
+                if char == 'w':
+                    ser.write(b'w')  # Send byte to Arduino
+                elif char == 's':
+                    ser.write(b's')
+                elif char == 'a':
+                    ser.write(b'a')
+                elif char == 'd':
+                    ser.write(b'd')
+                elif char == 'l':
+                    ser.write(b'l')
 
 def extract_characters(s):
     # Check if the string starts with '[' and ends with ']'
