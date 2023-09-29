@@ -11,8 +11,14 @@ from picamera2.outputs import FileOutput
 from io import BytesIO
 from PIL import Image
 from pyzbar.pyzbar import decode
+<<<<<<< HEAD
 from threading import Condition
 import socket
+=======
+import socketserver
+from threading import Condition
+
+>>>>>>> 349fb33
 import numpy as np
 from pyzbar.pyzbar import decode
 from typing import Optional
