@@ -48,6 +48,8 @@ Connect the collision detector echoPin to pin11 and the trigPin to pin6. Connect
   const int trigPin = 6;
   const int echoPin = 11;
 
+``````
+
 ## QR Detection Dependencies
 
 `sudo apt-get install xdg-utils`
