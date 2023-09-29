@@ -10,7 +10,7 @@ def UnderstandMe():
     openai.api_key = "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"
 
     # Read the content of the 'last_person.txt' file
-    with open('last_person.txt', 'r') as last_person_file:
+    with open('~/data/last_person.txt', 'r') as last_person_file:
         detected_person = last_person_file.read().strip()
 
     # Check if 'detected_person' is not empty

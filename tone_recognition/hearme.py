@@ -4,6 +4,7 @@ from scipy.signal import butter, lfilter
 import wave
 import time
 import queue
+from pathlib import Path
 
 # Set sound recording format
 CHUNK = 1600                # Buffer size
@@ -88,6 +89,9 @@ def start_recording(matching_target, command_queue):
     detected_person, detected_wav_file = PEOPLE[matching_target]
     print(
         f"Recording started for {detected_person}...")
+    if detected_person is not None:
+        with open(last_person_file, 'w') as file:
+            file.write(detected_person)
     frames = []  # Clear frames
     recording = True
     record_starting_time = time.time()
@@ -114,11 +118,18 @@ def stop_recording(detected_wav_file, frames):
 
     return recording, detected_person, detected_wav_file
 
+data_path = Path('~/data')
+data_path.mkdir(exist_ok=True, parents=True)
+last_person_file = str(data_path / "last_person.txt")
+print(last_person_file)
+
 
 def HearMe(command_queue=None):
     """
+
     record audio and save it to a WAV file
     """
+
     if not command_queue:
         command_queue = queue.Queue()
     # Initialize variables for recording and note detection
@@ -189,6 +200,7 @@ def HearMe(command_queue=None):
                             recording, detected_person, detected_wav_file = stop_recording(
                                 detected_wav_file, frames)
                             break
+                
                         start_time = None
                 else:
                     # New tone detected
