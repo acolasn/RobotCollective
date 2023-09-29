@@ -4,10 +4,12 @@ from scipy.signal import butter, lfilter
 import wave
 import time
 import queue
+import speech.libs.NBB_sound as sound
+import importlib
+importlib.reload(sound)
 
 # Set sound recording format
 CHUNK = 1600                # Buffer size
-FORMAT = pyaudio.paInt16    # Data type
 CHANNELS = 1                # Number of channels
 RATE = 16000                # Sample rate (Hz)
 
@@ -35,9 +37,15 @@ PEOPLE = {
 # Initialize PyAudio
 pya = pyaudio.PyAudio()
 
+input_device = 1
+num_input_channels = 1
+sample_rate = 16000
+buffer_size = int(sample_rate / 100)
+buffer_size = int(sample_rate / 100)
+max_samples = int(sample_rate * 10)
+microphone = sound.microphone(input_device, num_input_channels, 'int32', sample_rate, buffer_size, max_samples)
+
 # Function to apply a bandpass filter to the audio data
-
-
 def apply_bandpass_filter(audio_data):
     # Normalize the audio data
     audio_data = audio_data / 32768.0
@@ -51,8 +59,8 @@ def apply_bandpass_filter(audio_data):
     # Apply the filter
     filtered_audio = lfilter(b, a, audio_data)
 
-    # Scale the filtered audio back to 16-bit integer range
-    filtered_audio = (filtered_audio * 32768.0).astype(np.int16)
+    # Scale the filtered audio back to 32-bit integer range
+    filtered_audio = (filtered_audio * 32768.0).astype(np.int32)
 
     return filtered_audio
 
@@ -89,6 +97,7 @@ def start_recording(matching_target, command_queue):
     print(
         f"Recording started for {detected_person}...")
     frames = []  # Clear frames
+    microphone.reset()
     recording = True
     record_starting_time = time.time()
     return frames, recording, record_starting_time, detected_person, detected_wav_file
@@ -102,12 +111,17 @@ def stop_recording(detected_wav_file, frames):
     if detected_wav_file is not None:
         wf = wave.open(detected_wav_file, 'wb')
         wf.setnchannels(CHANNELS)
-        wf.setsampwidth(2)
+        wf.setsampwidth(4)
         wf.setframerate(RATE)
         wf.writeframes(b''.join(frames))
         wf.close()
     # elif detected_wav_file is None:
     #     recording=False
+    
+
+    #if detected_wav_file is not None:
+        #microphone.save_wav(detected_wav_file, max_samples)
+
     recording = False
     detected_person = None
     detected_wav_file = None
@@ -141,15 +155,7 @@ def HearMe(command_queue=None):
     last_person_file = "last_person.txt"
     try:
         # Open audio stream (from default device)
-        stream = pya.open(format=FORMAT,
-                          channels=CHANNELS,
-                          rate=RATE,
-                          input=True,
-                          start=False,
-                          frames_per_buffer=CHUNK)
-
-        # Start streaming audio
-        stream.start_stream()
+        microphone.start()
 
         # Initialize variables for recording duration and maximum recording time
         record_starting_time = 0
@@ -157,9 +163,8 @@ def HearMe(command_queue=None):
 
         while True:
             # Read audio data from the stream
-
-            raw_data = stream.read(CHUNK, exception_on_overflow=False)
-            audio_data = np.frombuffer(raw_data, dtype=np.int16)
+            raw_data = microphone.stream.read(CHUNK, exception_on_overflow=False)
+            audio_data = np.frombuffer(raw_data, dtype=np.int32)
 
             # Apply the bandpass filter to the audio data
             filtered_audio_data = apply_bandpass_filter(audio_data)
@@ -183,11 +188,9 @@ def HearMe(command_queue=None):
                         start_time = time.time()
                     elif time.time() - start_time >= 1.5:
                         if not recording:
-                            frames, recording, record_starting_time, detected_person, detected_wav_file = start_recording(
-                                matching_target, command_queue)
+                            frames, recording, record_starting_time, detected_person, detected_wav_file = start_recording(matching_target, command_queue)
                         else:  # is recording
-                            recording, detected_person, detected_wav_file = stop_recording(
-                                detected_wav_file, frames)
+                            recording, detected_person, detected_wav_file = stop_recording(detected_wav_file, frames)
                             break
                         start_time = None
                 else:
@@ -200,14 +203,14 @@ def HearMe(command_queue=None):
                 start_time = None
 
             if recording:
-                frames.append(raw_data)  # Record audio
+                print(audio_data.shape)
+                frames.append(audio_data)  # Record audio
             else:  # not recording
                 record_starting_time = 0
 
             # Check for maximum recording time (60 seconds)
             if time.time() - record_starting_time >= 60 and record_starting_time != 0:
-                recording, detected_person, detected_wav_file = stop_recording(
-                    detected_wav_file, frames)
+                recording, detected_person, detected_wav_file = stop_recording(detected_wav_file, frames)
                 break
 
     except KeyboardInterrupt:
@@ -218,17 +221,21 @@ def HearMe(command_queue=None):
             print("Recording stopped due to interruption...")
         if frames:
             # Stop recording and save the recorded audio
-            stream.stop_stream()
-            stream.close()
+            #microphone.stream.stop_stream()
+            #microphone.stream.close()
 
+            
             wf = wave.open("speech.wav", 'wb')
             wf.setnchannels(CHANNELS)
-            wf.setsampwidth(2)
+            wf.setsampwidth(4)
             wf.setframerate(RATE)
             wf.writeframes(b''.join(frames))
             wf.close()
+            
 
-        pya.terminate()
+            # microphone.save_wav("speech.wav", max_samples)
+
+        #microphone.stop()
 
 
 if __name__ == "__main__":
