@@ -52,4 +52,4 @@ Connect the collision detector echoPin to pin11 and the trigPin to pin6. Connect
 
 `sudo apt-get install xdg-utils`
 
-Go to line 274 in `main_w_queue.py`, and type your Raspberry Pi IP address.
+The video streaming web browser will be opened automatically once you install this library.
