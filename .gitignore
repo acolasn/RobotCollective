@@ -164,3 +164,4 @@ __pycache__
 Loggers/*
 *degub*
 *.wav
+*debug*

@@ -11,9 +11,8 @@ from picamera2.outputs import FileOutput
 from io import BytesIO
 from PIL import Image
 from pyzbar.pyzbar import decode
-import socketserver
 from threading import Condition
-
+import socket
 import numpy as np
 from pyzbar.pyzbar import decode
 from typing import Optional
@@ -271,7 +270,12 @@ picam2.configure(camera_config)
 output = StreamingOutput()
 picam2.start_recording(MJPEGEncoder(), FileOutput(output))
 
-myIP = "192.168.1.139"
+
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.connect(("8.8.8.8", 80))
+myIP = s.getsockname()[0]
+s.close()
+
 def run_qr_detection(queue):
     try:
         address = ('', 8000)
