@@ -103,7 +103,7 @@ class microphone:
         self.pya = pyaudio.PyAudio()
 
         # Open audio input stream
-        self.stream = self.pya.open(input_device_index=device, format=self.format, channels=num_channels, rate=sample_rate, input=True, output=False, frames_per_buffer=buffer_size_samples, start=False, stream_callback=callback)
+        self.stream = self.pya.open(input_device_index=device, format=self.format, channels=num_channels, rate=sample_rate, input=True, output=True, frames_per_buffer=buffer_size_samples, start=False, stream_callback=callback)
 
     # Start streaming
     def start(self):

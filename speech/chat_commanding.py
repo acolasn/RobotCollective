@@ -100,14 +100,12 @@ def openAI_driver_function(data_queue, qr_queue, recorded_audio_queue, command_q
 
     # Specify paths
     repo_path = '/home/' + username + '/RobotCollective'
-    box_path = repo_path + '/chat_virtualmachine'
+    box_path = repo_path + '/speech'
     output_wav_path = box_path + '/_tmp/output.wav'
     tone_path = str(find_wav_file(json_filename = "robot_config.json", search_folder = "tone_recognition/tone_lib"))
     
     # Specify params
-    input_device = 1
     output_device = 1
-    num_input_channels = 2
     num_output_channels = 1
 
     # List available sound devices
@@ -268,19 +266,11 @@ def openAI_driver_function(data_queue, qr_queue, recorded_audio_queue, command_q
                 while speaker.is_playing():
                     time.sleep(0.1)
                 screen.refresh()
+                speaker.stop()
                 command_queue.put("LISTEN")
 
-                speaker.stop()
-
     finally:
-        # Shutdown microphone
-        # microphone.stop()
-
-        # Shutdown speaker
-        speaker.stop()
-
         # Shutdown curses
-
         curses.nocbreak()
         screen.keypad(0)
         curses.echo()
