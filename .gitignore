@@ -163,4 +163,5 @@ cython_debug/
 __pycache__
 Loggers/*
 *degub*
-
+*.wav
+*debug*

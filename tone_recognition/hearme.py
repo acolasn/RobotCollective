@@ -163,7 +163,7 @@ def HearMe(command_queue=None):
 
         while True:
             # Read audio data from the stream
-            raw_data = microphone.stream.read(CHUNK)
+            raw_data = microphone.stream.read(CHUNK, exception_on_overflow=False)
             audio_data = np.frombuffer(raw_data, dtype=np.int32)
 
             # Apply the bandpass filter to the audio data
@@ -171,7 +171,7 @@ def HearMe(command_queue=None):
 
             # Calculate the average frequency of the filtered audio
             average_freq = calculate_average_frequency(filtered_audio_data)
-            print(average_freq)
+            #print(average_freq)
 
             # Check if the frequency matches one of the target frequencies with tolerance
             matching_target = None

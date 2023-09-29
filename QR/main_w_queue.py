@@ -10,16 +10,9 @@ from picamera2.encoders import MJPEGEncoder
 from picamera2.outputs import FileOutput
 from io import BytesIO
 from PIL import Image
-import numpy as np
 from pyzbar.pyzbar import decode
-import io
-import logging
-import socketserver
-from http import server
 from threading import Condition
-
-from io import BytesIO
-from PIL import Image
+import socket
 import numpy as np
 from pyzbar.pyzbar import decode
 from typing import Optional
@@ -248,18 +241,15 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         if distance > 30:
                             chat_prompt += "distance is {}".format(int(distance))
                             
-                        queue.put(str((qr_decode_output, distance, centroid[1])))
-                        # queue.put("#move forward#[w]")
+                        queue.put(str((qr_decode_output, distance, centroid[0] - 320)))
                         print("QUEUE: ", queue.queue[-1])
                         
-                    # print(readed_qr)
                     self.wfile.write(b'--FRAME\r\n')
                     self.send_header('Content-Type', 'image/jpeg')
                     self.send_header('Content-Length', len(frame))
                     self.end_headers()
                     self.wfile.write(frame)
                     self.wfile.write(b'\r\n')
-                    # print('Above operation took %f sec.' % (t.interval))
             except Exception as e:
                 logging.warning(
                     'Removed streaming client %s: %s',
@@ -280,12 +270,20 @@ picam2.configure(camera_config)
 output = StreamingOutput()
 picam2.start_recording(MJPEGEncoder(), FileOutput(output))
 
+
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.connect(("8.8.8.8", 80))
+myIP = s.getsockname()[0]
+s.close()
+
 def run_qr_detection(queue):
     try:
         address = ('', 8000)
         server = StreamingServer(address, StreamingHandler)
+        os.system("xdg-open http://{}:8000/index.html".format(myIP))
         server.queue = queue
         server.serve_forever()
+        
     finally:
         picam2.stop_recording()
 
