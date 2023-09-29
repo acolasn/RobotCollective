@@ -157,7 +157,7 @@ def HearMe(command_queue=None):
 
         while True:
             # Read audio data from the stream
-            raw_data = stream.read(CHUNK)
+            raw_data = stream.read(CHUNK, exception_on_overflow=False)
             audio_data = np.frombuffer(raw_data, dtype=np.int16)
 
             # Apply the bandpass filter to the audio data
