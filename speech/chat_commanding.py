@@ -154,12 +154,18 @@ def openAI_driver_function(data_queue, qr_queue, recorded_audio_queue, command_q
                     function_call= {"name":"talk_and_move_as_a_robot"}
                 )
                 # Extract and display reply
-                response_message = response.choices[0].message
                 if response_message.get("function_call"):
-                    print("OH THERE IS A FUNCTION CALL")
-                    print(response_message.get("function_call"))
-                    reply = json.loads(response["choices"][0]["message"]["function_call"]["arguments"])
+                    #print("OH THERE IS A FUNCTION CALL")
+                    #print(response_message.get("function_call"))
+                    #print(response["choices"][0]["message"]["function_call"]["arguments"])
+                    uncleaned_response = response["choices"][0]["message"]["function_call"]["arguments"]
+                    cleaned_response_str = uncleaned_response.replace("'", '"')
+                    #print('cleaned_response_str: {0}'.format(cleaned_response_str))
+                    reply = json.loads(cleaned_response_str)
+                    #print(reply)
                     data_queue.put(reply)
+
+
                 #reply = json.loads(response["choices"][0]["message"]["function_call"]["arguments"])
                 conversation.append({'role': 'assistant', 'content': f'{reply}'})
                 #data_queue.put(reply)
