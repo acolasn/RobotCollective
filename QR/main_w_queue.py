@@ -12,6 +12,7 @@ from io import BytesIO
 from PIL import Image
 from pyzbar.pyzbar import decode
 <<<<<<< HEAD
+<<<<<<< HEAD
 from threading import Condition
 import socket
 =======
@@ -19,6 +20,10 @@ import socketserver
 from threading import Condition
 
 >>>>>>> 349fb33
+=======
+from threading import Condition
+import socket
+>>>>>>> 7aa33fa
 import numpy as np
 from pyzbar.pyzbar import decode
 from typing import Optional
