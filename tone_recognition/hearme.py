@@ -16,8 +16,8 @@ RATE = 16000                # Sample rate (Hz)
 LOWCUT = 150                # Low cutoff frequency (Hz)
 HIGHCUT = 4000              # High cutoff frequency (Hz)
 
-TARGET_FREQUENCIES = [(439, 1), (523, 1), (554, 1), (587, 1), (622, 1), (
-    659, 1), (698, 1), (739, 1.5), (783, 3), (830, 1)]  # B,C, D, D sharp, E, F, G
+TARGET_FREQUENCIES = [(439, 3), (523, 3), (554, 3), (587, 3), (622, 3), (
+    659, 3), (698, 3), (739, 3), (783, 3), (830, 3)]  # B,C, D, D sharp, E, F, G
 
 # Map target frequencies to people and their corresponding WAV file names
 PEOPLE = {
